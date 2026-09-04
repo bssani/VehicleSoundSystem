@@ -35,15 +35,19 @@ New-Item -ItemType Junction -Path "<Project>\Plugins\VehicleSoundSystem" `
 그리고 프로젝트의 `.gitignore`에 `Plugins/VehicleSoundSystem/`을 넣어 사본이
 프로젝트 저장소에 딸려 들어가지 않게 한다.
 
+## MetaSound 없이 쓰기
+
+MetaSound 그래프가 없어도 동작한다. 레이어에 일반 `SoundWave` 루프를 넣으면
+코드가 직접 피치와 볼륨을 조절한다. 그래프는 나중에 품질을 올릴 때 얹는다.
+
+- 엔진: `RPMToPitchCurve`가 있으면 그걸 쓰고, 없으면 `PitchAtMaxRPM`까지 선형 보간한다.
+  루프 하나로도 RPM에 따라 변하는 엔진 소리가 난다
+- 타이어: `MetaSoundSource`가 비어 있으면 `SurfaceSounds`에서 노면에 맞는 샘플을 골라 튼다
+
 ## 알려진 미완성 (2026-09-05)
 
-플러그인 자체의 결함이며 프로젝트와 무관하다.
-
-- `RPMToPitchCurve`, `EngineSamples`, `ExhaustSamples`, `SurfaceSounds`,
-  `IdleRPM`/`MaxRPM`/`RedlineRPM` — 데이터 에셋에 선언만 되어 있고 코드가 읽지 않는다
 - `UVehicleSoundSubsystem` 헤더는 거리 기반 LOD를 제공한다고 적어두었으나 구현이 없다
-- 타이어 슬립을 `조향입력 x 속도`로 추정한다. 실제 휠 슬립을 읽어야 한다
 - 충돌/충격 사운드 레이어가 없다
-- **MetaSound 소스가 없으면 무음이다.** 레이어는 `RPM` 등 이름 붙은 파라미터를
-  MetaSound 그래프로 넘길 뿐이고, 샘플 크로스페이드와 피치 시프트는 전부 그래프가 한다.
-  이 저장소에는 그래프도 커브도 음원도 들어 있지 않다
+- `EngineSamples` / `ExhaustSamples` 배열은 MetaSound 그래프가 쓰라고 둔 것이고
+  코드는 읽지 않는다. 단일 샘플 경로에서는 필요 없다
+- 이 저장소에 MetaSound 그래프도 커브도 음원도 들어 있지 않다

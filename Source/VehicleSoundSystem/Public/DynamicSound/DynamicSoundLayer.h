@@ -56,6 +56,16 @@ protected:
 	/** Helper to set an int parameter on the AudioComponent (MetaSound input) */
 	void SetMetaSoundIntParameter(FName ParameterName, int32 Value);
 
+	/** Sets playback pitch directly on the AudioComponent.
+	 *  A MetaSound graph does its own pitch work, but a layer pointed at a plain SoundWave has
+	 *  no graph to do it, and without this the sound never changes with the vehicle. Driving it
+	 *  from the data asset's curves makes a single loop usable on its own. */
+	void SetPlaybackPitch(float Pitch);
+
+	/** Swaps the playing sound, resuming playback if it was already going. Used where a layer
+	 *  picks between per-surface samples with no MetaSound graph to crossfade them. */
+	void SwapSound(USoundBase* NewSound);
+
 	UPROPERTY()
 	TObjectPtr<UVehicleSoundComponent> OwningComponent;
 

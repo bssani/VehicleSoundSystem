@@ -97,6 +97,31 @@ UAudioComponent* UDynamicSoundLayer::CreateAudioComponent(USoundBase* Sound)
 	return NewAudioComp;
 }
 
+void UDynamicSoundLayer::SetPlaybackPitch(float Pitch)
+{
+	if (AudioComponent)
+	{
+		AudioComponent->SetPitchMultiplier(FMath::Max(Pitch, KINDA_SMALL_NUMBER));
+	}
+}
+
+void UDynamicSoundLayer::SwapSound(USoundBase* NewSound)
+{
+	if (!AudioComponent || !NewSound || AudioComponent->Sound == NewSound)
+	{
+		return;
+	}
+
+	const bool bWasPlaying = AudioComponent->IsPlaying();
+
+	AudioComponent->SetSound(NewSound);
+
+	if (bWasPlaying)
+	{
+		AudioComponent->Play();
+	}
+}
+
 void UDynamicSoundLayer::SetMetaSoundParameter(FName ParameterName, float Value)
 {
 	if (AudioComponent)

@@ -29,9 +29,14 @@ struct VEHICLESOUNDSYSTEM_API FEngineSoundConfig
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Engine")
 	TObjectPtr<UCurveFloat> RPMToVolumeCurve;
 
-	/** Curve mapping RPM to pitch multiplier */
+	/** Curve mapping RPM to pitch multiplier. Leave unset to use the linear fallback below */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Engine")
 	TObjectPtr<UCurveFloat> RPMToPitchCurve;
+
+	/** Pitch at MaxRPM when no RPMToPitchCurve is authored. Idle is always 1.0, so 2.0 means the
+	 *  loop plays an octave up at redline. Only used as a fallback */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Engine", meta = (ClampMin = "1.0", ClampMax = "4.0"))
+	float PitchAtMaxRPM = 2.0f;
 
 	/** Optional multi-sample layers used inside MetaSound */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Engine")

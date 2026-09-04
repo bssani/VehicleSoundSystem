@@ -43,6 +43,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound|Config")
 	bool bAutoDetectFromChaosVehicle = true;
 
+	/** Chaos slip magnitude treated as fully sliding, used to normalise TireSlip to 0-1.
+	 *  Raise it if tyres squeal too readily, lower it if they stay quiet through a slide */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound|Config", meta = (ClampMin = "1.0"))
+	float TireSlipReference = 300.0f;
+
 	// --- Manual State Input (use when bAutoDetectFromChaosVehicle is false) ---
 
 	/** Manually update the full vehicle sound state */

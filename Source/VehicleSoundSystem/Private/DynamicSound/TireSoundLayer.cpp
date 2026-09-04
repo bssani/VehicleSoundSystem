@@ -5,10 +5,25 @@ void UTireSoundLayer::Initialize(UVehicleSoundComponent* InOwner, UDynamicSoundD
 {
 	Super::Initialize(InOwner, InDataAsset);
 
-	if (DataAsset)
+	if (!DataAsset)
 	{
-		AudioComponent = CreateAudioComponent(DataAsset->TireConfig.MetaSoundSource);
+		return;
 	}
+
+	// prefer the MetaSound graph. Without one, fall back to the per-surface samples so the layer
+	// still makes noise: the graph would normally crossfade these, we just switch between them
+	USoundBase* Source = DataAsset->TireConfig.MetaSoundSource;
+
+	if (!Source)
+	{
+		if (TObjectPtr<USoundWave>* Fallback = DataAsset->TireConfig.SurfaceSounds.Find(ETireSurfaceType::Asphalt))
+		{
+			Source = *Fallback;
+		}
+	}
+
+	AudioComponent = CreateAudioComponent(Source);
+	bUsingSurfaceSamples = DataAsset->TireConfig.MetaSoundSource == nullptr;
 }
 
 void UTireSoundLayer::Update(float DeltaTime, const FVehicleSoundState& State)
@@ -18,16 +33,37 @@ void UTireSoundLayer::Update(float DeltaTime, const FVehicleSoundState& State)
 		return;
 	}
 
+	if (!DataAsset)
+	{
+		return;
+	}
+
+	const FTireSoundConfig& Config = DataAsset->TireConfig;
+
+	// with no graph to crossfade them, swap the sample when the surface underfoot changes
+	if (bUsingSurfaceSamples && State.TireSurface != LastSurface)
+	{
+		if (const TObjectPtr<USoundWave>* SurfaceSound = Config.SurfaceSounds.Find(State.TireSurface))
+		{
+			SwapSound(*SurfaceSound);
+		}
+
+		LastSurface = State.TireSurface;
+	}
+
 	SetMetaSoundParameter(FName("Speed"), State.Speed);
 	SetMetaSoundIntParameter(FName("SurfaceType"), static_cast<int32>(State.TireSurface));
-	// SlipAngle approximated from steering input and speed
-	float SlipAngle = FMath::Abs(State.SteeringInput) * FMath::GetMappedRangeValueClamped(
-		FVector2D(0.0f, 100.0f), FVector2D(0.0f, 1.0f), State.Speed);
-	SetMetaSoundParameter(FName("SlipAngle"), SlipAngle);
+	SetMetaSoundParameter(FName("Slip"), State.TireSlip);
+	SetMetaSoundParameter(FName("Skidding"), State.bTireSkidding ? 1.0f : 0.0f);
 
-	if (DataAsset && DataAsset->TireConfig.SpeedToTireVolume)
+	// rolling noise scales with speed, but sliding is what makes tyres loud. Taking the louder of
+	// the two means a stationary burnout is still heard, which the old speed-only path missed
+	float RollingVolume = 1.0f;
+
+	if (Config.SpeedToTireVolume)
 	{
-		float CurveVolume = DataAsset->TireConfig.SpeedToTireVolume->GetFloatValue(State.Speed);
-		AudioComponent->SetVolumeMultiplier(Volume * CurveVolume);
+		RollingVolume = Config.SpeedToTireVolume->GetFloatValue(State.Speed);
 	}
+
+	AudioComponent->SetVolumeMultiplier(Volume * FMath::Max(RollingVolume, State.TireSlip));
 }

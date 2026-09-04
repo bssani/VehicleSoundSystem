@@ -203,6 +203,29 @@ void UVehicleSoundComponent::GatherStateFromChaosVehicle()
 	CurrentState.bEngineRunning = true; // Chaos Vehicle engine is always running when active
 	CurrentState.EngineLoad = FMath::Clamp(CurrentState.ThrottleInput * 0.7f + (CurrentState.RPM / 7000.0f) * 0.3f, 0.0f, 1.0f);
 	CurrentState.PowertrainType = PowertrainType;
+
+	// tyre noise follows how hard the tyres are sliding, not how fast the car is going. Take the
+	// worst wheel: one locked wheel is audible even if the other three are gripping
+	float WorstSlip = 0.0f;
+	bool bAnySkidding = false;
+
+	const int32 NumWheels = CachedChaosVehicle->Wheels.Num();
+
+	for (int32 WheelIndex = 0; WheelIndex < NumWheels; ++WheelIndex)
+	{
+		const FWheelStatus& Wheel = CachedChaosVehicle->GetWheelState(WheelIndex);
+
+		if (!Wheel.bInContact)
+		{
+			continue;
+		}
+
+		WorstSlip = FMath::Max(WorstSlip, FMath::Max(Wheel.SlipMagnitude, Wheel.SkidMagnitude));
+		bAnySkidding |= Wheel.bIsSkidding;
+	}
+
+	CurrentState.TireSlip = FMath::Clamp(WorstSlip / FMath::Max(TireSlipReference, 1.0f), 0.0f, 1.0f);
+	CurrentState.bTireSkidding = bAnySkidding;
 }
 
 void UVehicleSoundComponent::UpdateDynamicLayers(float DeltaTime)

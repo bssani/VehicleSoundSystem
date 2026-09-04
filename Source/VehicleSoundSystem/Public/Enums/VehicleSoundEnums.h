@@ -101,6 +101,16 @@ struct VEHICLESOUNDSYSTEM_API FVehicleSoundState
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound")
 	ETireSurfaceType TireSurface = ETireSurfaceType::Asphalt;
 
+	/** How hard the tyres are sliding, 0-1, taken as the worst wheel. This is what tyre noise
+	 *  should follow: a car can be silent at speed and screaming while stationary in a burnout,
+	 *  so speed alone can't stand in for it */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float TireSlip = 0.0f;
+
+	/** True while any wheel is skidding. Chaos reports this separately from slip */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound")
+	bool bTireSkidding = false;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound")
 	EVehiclePowertrainType PowertrainType = EVehiclePowertrainType::ICE;
 
