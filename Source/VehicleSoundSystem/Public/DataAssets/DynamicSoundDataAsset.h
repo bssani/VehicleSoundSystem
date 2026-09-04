@@ -110,6 +110,42 @@ struct VEHICLESOUNDSYSTEM_API FTransmissionSoundConfig
 	TObjectPtr<UCurveFloat> RPMToWhineVolume;
 };
 
+/** Configuration for collision/impact sounds */
+USTRUCT(BlueprintType)
+struct VEHICLESOUNDSYSTEM_API FImpactSoundConfig
+{
+	GENERATED_BODY()
+
+	/** Impact samples ordered light to heavy. The one played is picked by how hard the hit was */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact")
+	TArray<TObjectPtr<USoundBase>> ImpactSounds;
+
+	/** Closing speed below which a contact is ignored. Cars rest against things and nudge kerbs
+	 *  constantly; without a floor here the car is permanently clattering */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact", meta = (Units = "cm/s"))
+	float MinImpactSpeed = 150.0f;
+
+	/** Closing speed treated as a full-force crash */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact", meta = (Units = "cm/s"))
+	float MaxImpactSpeed = 1500.0f;
+
+	/** Rate limit. Chaos reports contact every frame while bodies stay touching */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact", meta = (Units = "s"))
+	float MinTimeBetweenImpacts = 0.12f;
+
+	/** Volume of the lightest impact that still plays. Full force is always 1.0 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float MinImpactVolume = 0.25f;
+
+	/** Pitch for a light knock. Above 1 reads as small and tinny */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact", meta = (ClampMin = "0.1"))
+	float PitchAtLightImpact = 1.25f;
+
+	/** Pitch for a heavy crash. Below 1 reads as large and heavy */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact", meta = (ClampMin = "0.1"))
+	float PitchAtHeavyImpact = 0.85f;
+};
+
 /**
  * Data asset for dynamic (driving) sounds.
  * Contains all configuration for engine, exhaust, tire, wind, and transmission layers.
@@ -143,4 +179,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Transmission")
 	FTransmissionSoundConfig TransmissionConfig;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact")
+	FImpactSoundConfig ImpactConfig;
 };

@@ -3,10 +3,12 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Enums/VehicleSoundEnums.h"
+#include "Subsystem/VehicleSoundSubsystem.h"
 #include "DataAssets/VehicleSoundPreset.h"
 #include "DynamicSound/DynamicSoundLayer.h"
 #include "InteractionSound/InteractionSoundHandler.h"
 #include "Infotainment/InfotainmentSoundHandler.h"
+#include "ImpactSound/ImpactSoundHandler.h"
 #include "VehicleSoundComponent.generated.h"
 
 class UChaosWheeledVehicleMovementComponent;
@@ -87,6 +89,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Vehicle Sound|Interaction")
 	void PlayInteractionSound(EInteractionSoundType Type);
 
+	/** Reports a collision so it can be heard. Called automatically from the owner's hit events;
+	 *  call it directly if the vehicle resolves its own collisions */
+	UFUNCTION(BlueprintCallable, Category = "Vehicle Sound|Impact")
+	void ReportImpact(const FVector& Location, float ImpactSpeed);
+
 	/** Start turn signal (repeating tick sound) */
 	UFUNCTION(BlueprintCallable, Category = "Vehicle Sound|Interaction")
 	void StartTurnSignal(float TickInterval = 0.5f);
@@ -133,6 +140,12 @@ private:
 	/** Update all dynamic layers with current state */
 	void UpdateDynamicLayers(float DeltaTime);
 
+	/** Turns layers on and off by how far this vehicle is from the listener */
+	void UpdateLOD();
+
+	/** LOD applied last frame, so layers are only toggled when the tier actually changes */
+	EVehicleSoundLOD CurrentLOD = EVehicleSoundLOD::Full;
+
 	UPROPERTY()
 	FVehicleSoundState CurrentState;
 
@@ -141,6 +154,9 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UInteractionSoundHandler> InteractionHandler;
+
+	UPROPERTY()
+	TObjectPtr<UImpactSoundHandler> ImpactHandler;
 
 	UPROPERTY()
 	TObjectPtr<UInfotainmentSoundHandler> InfotainmentHandler;

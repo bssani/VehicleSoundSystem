@@ -20,6 +20,26 @@ void UVehicleSoundSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
+EVehicleSoundLOD UVehicleSoundSubsystem::GetLODForDistance(float Distance) const
+{
+	if (Distance >= CullDistance)
+	{
+		return EVehicleSoundLOD::Culled;
+	}
+
+	if (Distance >= EngineOnlyDistance)
+	{
+		return EVehicleSoundLOD::EngineOnly;
+	}
+
+	if (Distance >= ReducedDistance)
+	{
+		return EVehicleSoundLOD::Reduced;
+	}
+
+	return EVehicleSoundLOD::Full;
+}
+
 void UVehicleSoundSubsystem::RegisterVehicle(UVehicleSoundComponent* Component)
 {
 	if (Component)

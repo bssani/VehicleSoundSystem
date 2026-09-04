@@ -11,6 +11,7 @@ Chaos Vehicle 기반 차량 사운드 플러그인. 엔진/타이어/바람 등 
 UVehicleSoundComponent      차량 액터에 붙이는 컴포넌트
   DynamicSoundLayer         주행음 베이스
     Engine / EVMotor / Exhaust / Tire / Wind / Transmission
+  ImpactSoundHandler        충돌음. 오너의 히트 이벤트를 직접 받는다
   InteractionSoundHandler   도어·경적·방향지시등 등 원샷
   InfotainmentSoundHandler  UI음, 음악 플레이어
 UVehicleSoundSubsystem      전역 볼륨, 차량 등록
@@ -44,10 +45,20 @@ MetaSound 그래프가 없어도 동작한다. 레이어에 일반 `SoundWave` �
   루프 하나로도 RPM에 따라 변하는 엔진 소리가 난다
 - 타이어: `MetaSoundSource`가 비어 있으면 `SurfaceSounds`에서 노면에 맞는 샘플을 골라 튼다
 
+## 거리 LOD
+
+차량 대수가 늘면 한 대당 오디오 컴포넌트 여섯 개가 전부 돌기 때문에, 리스너와의
+거리로 레이어를 끈다. 거리는 폰이 아니라 카메라 기준으로 잰다.
+
+| 거리 | 도는 레이어 |
+|---|---|
+| ~ ReducedDistance (25m) | 전부 |
+| ~ EngineOnlyDistance (60m) | 엔진·배기·타이어 |
+| ~ CullDistance (150m) | 엔진만 |
+| 그 이상 | 없음 |
+
 ## 알려진 미완성 (2026-09-05)
 
-- `UVehicleSoundSubsystem` 헤더는 거리 기반 LOD를 제공한다고 적어두었으나 구현이 없다
-- 충돌/충격 사운드 레이어가 없다
 - `EngineSamples` / `ExhaustSamples` 배열은 MetaSound 그래프가 쓰라고 둔 것이고
   코드는 읽지 않는다. 단일 샘플 경로에서는 필요 없다
 - 이 저장소에 MetaSound 그래프도 커브도 음원도 들어 있지 않다

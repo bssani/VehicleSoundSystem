@@ -1,4 +1,5 @@
 #include "Components/VehicleSoundComponent.h"
+#include "ImpactSound/ImpactSoundHandler.h"
 #include "Components/MusicPlayerComponent.h"
 #include "Subsystem/VehicleSoundSubsystem.h"
 #include "DynamicSound/EngineSoundLayer.h"
@@ -74,6 +75,12 @@ void UVehicleSoundComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		InteractionHandler->StopAllRepeatingSounds();
 	}
 
+	// unhooks the owner's hit delegate
+	if (ImpactHandler)
+	{
+		ImpactHandler->Shutdown();
+	}
+
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -92,7 +99,90 @@ void UVehicleSoundComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		GatherStateFromChaosVehicle();
 	}
 
+	UpdateLOD();
 	UpdateDynamicLayers(DeltaTime);
+}
+
+void UVehicleSoundComponent::UpdateLOD()
+{
+	const UWorld* World = GetWorld();
+	AActor* Owner = GetOwner();
+
+	if (!World || !Owner)
+	{
+		return;
+	}
+
+	UVehicleSoundSubsystem* Subsystem = World->GetGameInstance()
+		? World->GetGameInstance()->GetSubsystem<UVehicleSoundSubsystem>()
+		: nullptr;
+
+	if (!Subsystem)
+	{
+		return;
+	}
+
+	// measured against the camera rather than the pawn, which is what the listener follows and
+	// is the difference that matters in VR
+	const APlayerController* PC = World->GetFirstPlayerController();
+
+	if (!PC || !PC->PlayerCameraManager)
+	{
+		return;
+	}
+
+	const float Distance = FVector::Dist(PC->PlayerCameraManager->GetCameraLocation(), Owner->GetActorLocation());
+	const EVehicleSoundLOD NewLOD = Subsystem->GetLODForDistance(Distance);
+
+	if (NewLOD == CurrentLOD)
+	{
+		return;
+	}
+
+	CurrentLOD = NewLOD;
+
+	for (UDynamicSoundLayer* Layer : DynamicLayers)
+	{
+		if (!Layer)
+		{
+			continue;
+		}
+
+		bool bShouldRun = false;
+
+		switch (CurrentLOD)
+		{
+		case EVehicleSoundLOD::Full:
+			bShouldRun = true;
+			break;
+
+		case EVehicleSoundLOD::Reduced:
+			// wind and gearbox whine are cabin detail; they don't carry across a track
+			bShouldRun = Layer->GetLayerType() == EDynamicSoundLayerType::Engine
+				|| Layer->GetLayerType() == EDynamicSoundLayerType::EVMotor
+				|| Layer->GetLayerType() == EDynamicSoundLayerType::Exhaust
+				|| Layer->GetLayerType() == EDynamicSoundLayerType::Tire;
+			break;
+
+		case EVehicleSoundLOD::EngineOnly:
+			bShouldRun = Layer->GetLayerType() == EDynamicSoundLayerType::Engine
+				|| Layer->GetLayerType() == EDynamicSoundLayerType::EVMotor;
+			break;
+
+		case EVehicleSoundLOD::Culled:
+			bShouldRun = false;
+			break;
+		}
+
+		if (bShouldRun && !Layer->IsActive())
+		{
+			Layer->Activate();
+		}
+		else if (!bShouldRun && Layer->IsActive())
+		{
+			Layer->Deactivate();
+		}
+	}
 }
 
 void UVehicleSoundComponent::InitializeFromPreset()
@@ -107,6 +197,14 @@ void UVehicleSoundComponent::InitializeFromPreset()
 	if (SoundPreset->DynamicSoundData)
 	{
 		CreateDynamicLayers();
+	}
+
+	// Impact handler. Lives on the dynamic asset because collisions are part of driving, and it
+	// hooks the owner's hit events itself
+	if (SoundPreset->DynamicSoundData)
+	{
+		ImpactHandler = NewObject<UImpactSoundHandler>(this);
+		ImpactHandler->Initialize(GetOwner(), SoundPreset->DynamicSoundData);
 	}
 
 	// Interaction handler
@@ -284,6 +382,14 @@ void UVehicleSoundComponent::PlayInteractionSound(EInteractionSoundType Type)
 	if (InteractionHandler)
 	{
 		InteractionHandler->PlaySound(Type);
+	}
+}
+
+void UVehicleSoundComponent::ReportImpact(const FVector& Location, float ImpactSpeed)
+{
+	if (ImpactHandler)
+	{
+		ImpactHandler->ReportImpact(Location, ImpactSpeed);
 	}
 }
 
