@@ -1,0 +1,11 @@
+# UE 빌드 산출물
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+*.sln
+*.suo
+.vs/
+
+# 콘텐츠 빌드 데이터
+*_BuiltData.uasset

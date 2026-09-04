@@ -1,0 +1,114 @@
+#include "DynamicSound/DynamicSoundLayer.h"
+#include "Components/VehicleSoundComponent.h"
+#include "VehicleSoundSystemModule.h"
+#include "Components/AudioComponent.h"
+#include "GameFramework/Actor.h"
+
+void UDynamicSoundLayer::Initialize(UVehicleSoundComponent* InOwner, UDynamicSoundDataAsset* InDataAsset)
+{
+	OwningComponent = InOwner;
+	DataAsset = InDataAsset;
+}
+
+void UDynamicSoundLayer::Activate()
+{
+	if (AudioComponent && !bIsActive)
+	{
+		AudioComponent->Play();
+		bIsActive = true;
+	}
+}
+
+void UDynamicSoundLayer::Deactivate()
+{
+	if (AudioComponent && bIsActive)
+	{
+		AudioComponent->Stop();
+		bIsActive = false;
+	}
+}
+
+void UDynamicSoundLayer::SetVolume(float InVolume)
+{
+	Volume = FMath::Clamp(InVolume, 0.0f, 1.0f);
+	if (AudioComponent)
+	{
+		AudioComponent->SetVolumeMultiplier(Volume);
+	}
+}
+
+void UDynamicSoundLayer::BeginDestroy()
+{
+	Deactivate();
+	if (AudioComponent)
+	{
+		AudioComponent->DestroyComponent();
+		AudioComponent = nullptr;
+	}
+	Super::BeginDestroy();
+}
+
+UAudioComponent* UDynamicSoundLayer::CreateAudioComponent(USoundBase* Sound)
+{
+	if (!Sound)
+	{
+		UE_LOG(LogVehicleSoundSystem, Warning, TEXT("DynamicSoundLayer: No MetaSound source assigned for layer type %d. Sound will be silent."), static_cast<int32>(GetLayerType()));
+		return nullptr;
+	}
+
+	if (!OwningComponent || !OwningComponent->GetOwner())
+	{
+		UE_LOG(LogVehicleSoundSystem, Error, TEXT("DynamicSoundLayer: No valid owning component/actor."));
+		return nullptr;
+	}
+
+	AActor* Owner = OwningComponent->GetOwner();
+	UAudioComponent* NewAudioComp = NewObject<UAudioComponent>(Owner);
+	if (!NewAudioComp)
+	{
+		return nullptr;
+	}
+
+	NewAudioComp->SetSound(Sound);
+	NewAudioComp->bAutoActivate = false;
+	NewAudioComp->bAutoDestroy = false;
+	NewAudioComp->SetVolumeMultiplier(Volume);
+
+	// Apply audio settings from data asset
+	if (DataAsset)
+	{
+		if (DataAsset->SoundClass)
+		{
+			NewAudioComp->SoundClassOverride = DataAsset->SoundClass;
+		}
+		if (DataAsset->Attenuation)
+		{
+			NewAudioComp->AttenuationSettings = DataAsset->Attenuation;
+		}
+		if (DataAsset->Concurrency)
+		{
+			NewAudioComp->ConcurrencySet.Add(DataAsset->Concurrency);
+		}
+	}
+
+	NewAudioComp->RegisterComponent();
+	NewAudioComp->AttachToComponent(Owner->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+
+	return NewAudioComp;
+}
+
+void UDynamicSoundLayer::SetMetaSoundParameter(FName ParameterName, float Value)
+{
+	if (AudioComponent)
+	{
+		AudioComponent->SetFloatParameter(ParameterName, Value);
+	}
+}
+
+void UDynamicSoundLayer::SetMetaSoundIntParameter(FName ParameterName, int32 Value)
+{
+	if (AudioComponent)
+	{
+		AudioComponent->SetIntParameter(ParameterName, Value);
+	}
+}
