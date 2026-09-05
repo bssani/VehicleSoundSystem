@@ -12,7 +12,13 @@ struct VEHICLESOUNDSYSTEM_API FEngineSoundConfig
 {
 	GENERATED_BODY()
 
-	/** MetaSound source to use for engine audio (MS_EngineLoop_ICE or MS_EngineLoop_EV) */
+	/** What this layer plays. Two ways to fill this in:
+	 *
+	 *  - a MetaSound that reads the RPM/NormalizedRPM/Throttle/EngineLoad/Redline parameters and
+	 *    does its own sample blending. Everything below is then unused
+	 *  - a plain looping SoundWave, in which case the curves below shape it
+	 *
+	 *  Leaving it empty means this layer is silent. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Engine")
 	TObjectPtr<USoundBase> MetaSoundSource;
 
@@ -29,17 +35,19 @@ struct VEHICLESOUNDSYSTEM_API FEngineSoundConfig
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Engine")
 	TObjectPtr<UCurveFloat> RPMToVolumeCurve;
 
-	/** Curve mapping RPM to pitch multiplier. Leave unset to use the linear fallback below */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Engine")
+	/** Curve mapping RPM to pitch multiplier. Only for the plain-SoundWave path: a MetaSound does
+	 *  its own pitch from the RPM it is sent. Leave unset to use the linear fallback below */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Engine", meta = (EditCondition = "MetaSoundSource == nullptr"))
 	TObjectPtr<UCurveFloat> RPMToPitchCurve;
 
-	/** Pitch at MaxRPM when no RPMToPitchCurve is authored. Idle is always 1.0, so 2.0 means the
-	 *  loop plays an octave up at redline. Only used as a fallback */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Engine", meta = (ClampMin = "1.0", ClampMax = "4.0"))
+	/** Pitch at MaxRPM when no RPMToPitchCurve is authored. Idle is always 1.0, so 2.0 plays the
+	 *  loop an octave up at redline. Only for the plain-SoundWave path */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Engine", meta = (ClampMin = "1.0", ClampMax = "4.0", EditCondition = "MetaSoundSource == nullptr && RPMToPitchCurve == nullptr"))
 	float PitchAtMaxRPM = 2.0f;
 
-	/** Optional multi-sample layers used inside MetaSound */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Engine")
+	/** Somewhere to keep the RPM-layered samples a MetaSound graph blends between. Nothing in
+	 *  code reads this; the graph holds its own references. Safe to leave empty */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Engine", AdvancedDisplay)
 	TArray<TObjectPtr<USoundWave>> EngineSamples;
 };
 
@@ -55,7 +63,8 @@ struct VEHICLESOUNDSYSTEM_API FExhaustSoundConfig
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Exhaust")
 	TObjectPtr<UCurveFloat> RPMToExhaustVolume;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Exhaust")
+	/** As with EngineSamples, a place to keep what the graph blends. Not read by code */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Exhaust", AdvancedDisplay)
 	TArray<TObjectPtr<USoundWave>> ExhaustSamples;
 };
 
@@ -68,8 +77,9 @@ struct VEHICLESOUNDSYSTEM_API FTireSoundConfig
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tire")
 	TObjectPtr<USoundBase> MetaSoundSource;
 
-	/** Sound wave per surface type for crossfade in MetaSound */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tire")
+	/** One loop per surface, used only when no MetaSound is assigned above: the layer switches
+	 *  between them as the ground changes. A graph would crossfade instead */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tire", meta = (EditCondition = "MetaSoundSource == nullptr"))
 	TMap<ETireSurfaceType, TObjectPtr<USoundWave>> SurfaceSounds;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tire")

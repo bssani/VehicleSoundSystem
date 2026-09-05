@@ -45,6 +45,41 @@ MetaSound 그래프가 없어도 동작한다. 레이어에 일반 `SoundWave` �
   루프 하나로도 RPM에 따라 변하는 엔진 소리가 난다
 - 타이어: `MetaSoundSource`가 비어 있으면 `SurfaceSounds`에서 노면에 맞는 샘플을 골라 튼다
 
+## 데이터 에셋 채우기
+
+칸이 많지만 대부분 비워도 된다. 각 레이어는 **둘 중 하나**만 고르면 된다.
+
+| | MetaSound를 쓸 때 | 일반 SoundWave를 쓸 때 |
+|---|---|---|
+| `MetaSoundSource` | 그래프 지정 | 루프 wav 지정 |
+| `RPMToPitchCurve` / `PitchAtMaxRPM` | **비움** (그래프가 함) | 선택. 없으면 자동 보간 |
+| `SurfaceSounds` | **비움** (그래프가 함) | 노면별 루프 |
+| `EngineSamples` / `ExhaustSamples` | 비워도 됨 (코드가 안 읽음) | 비움 |
+
+에디터에서 `MetaSoundSource`를 채우면 필요 없는 칸은 자동으로 비활성화된다.
+
+**최소 구성 — 이 세 칸만 채우면 소리가 난다.**
+
+1. `Engine Config > MetaSoundSource` — 엔진 루프 하나
+2. `Tire Config > MetaSoundSource` 또는 `SurfaceSounds > Asphalt`
+3. `Impact Config > ImpactSounds` — 약한 것부터 강한 것 순으로
+
+나머지 숫자 값들은 기본값이 들어 있고, 차량에 맞춰 조정하는 용도다. 엔진의
+`IdleRPM`/`MaxRPM`/`RedlineRPM`은 **차량의 실제 설정과 맞춰야** 피치가 회전수와
+따로 놀지 않는다.
+
+## 파라미터 이름이 다른 MetaSound 붙이기
+
+레이어는 항상 자기 이름으로 값을 보낸다.
+
+- 엔진: `RPM`, `NormalizedRPM`, `Speed`, `Throttle`, `EngineLoad`, `Redline`
+- 타이어: `Speed`, `SurfaceType`, `Slip`, `Skidding`
+- 바람: `Speed`
+- 변속기: `RPM`, `Gear`
+
+그래프가 다른 이름을 듣는다면 데이터 에셋의 `ParameterNameOverrides`에 적는다.
+예를 들어 `Slip -> OnSlip`, `SurfaceType -> Surface`.
+
 ## 거리 LOD
 
 차량 대수가 늘면 한 대당 오디오 컴포넌트 여섯 개가 전부 돌기 때문에, 리스너와의
