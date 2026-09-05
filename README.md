@@ -73,6 +73,18 @@ MetaSound 그래프가 없어도 동작한다. 레이어에 일반 `SoundWave` �
 `IdleRPM`/`MaxRPM`/`RedlineRPM`은 **차량의 실제 설정과 맞춰야** 피치가 회전수와
 따로 놀지 않는다.
 
+## 노면 종류
+
+타이어 소리는 아스팔트냐 자갈이냐에 따라 달라야 한다. Chaos가 바퀴 접지면의
+피지컬 머티리얼을 알려주므로 그것으로 판정하는데, `EPhysicalSurface` 값은 프로젝트마다
+의미가 다르므로 매핑을 직접 채워야 한다.
+
+`VehicleSoundComponent > SurfaceTypeMapping`에 프로젝트의 피지컬 서피스를
+`ETireSurfaceType`에 대응시킨다. 예: `SurfaceType1(자갈) -> Gravel`.
+
+**비워두면 전부 아스팔트로 처리된다.** 포장도로만 달리는 프로젝트라면 그대로 두어도
+된다. 가장 심하게 미끄러지는 바퀴의 노면을 채택한다.
+
 ## 파라미터 이름이 다른 MetaSound 붙이기
 
 레이어는 항상 자기 이름으로 값을 보낸다.

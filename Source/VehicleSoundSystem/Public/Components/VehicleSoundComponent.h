@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Enums/VehicleSoundEnums.h"
+#include "Chaos/ChaosEngineInterface.h"
 #include "Subsystem/VehicleSoundSubsystem.h"
 #include "DataAssets/VehicleSoundPreset.h"
 #include "DynamicSound/DynamicSoundLayer.h"
@@ -44,6 +45,14 @@ public:
 	/** If true, auto-detects ChaosVehicleMovementComponent and reads RPM/Speed/Gear from it */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound|Config")
 	bool bAutoDetectFromChaosVehicle = true;
+
+	/** Maps the physical material under the wheels onto a tyre surface.
+	 *
+	 *  Surface types are defined per project, so there is no sensible default beyond asphalt.
+	 *  Until a project fills this in every surface sounds like tarmac, which is wrong the moment
+	 *  the car leaves the road. Take the surface from the worst-gripping wheel in contact. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound|Config")
+	TMap<TEnumAsByte<EPhysicalSurface>, ETireSurfaceType> SurfaceTypeMapping;
 
 	/** Chaos slip magnitude treated as fully sliding, used to normalise TireSlip to 0-1.
 	 *  Raise it if tyres squeal too readily, lower it if they stay quiet through a slide */

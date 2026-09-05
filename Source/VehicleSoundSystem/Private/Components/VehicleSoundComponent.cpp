@@ -1,5 +1,6 @@
 #include "Components/VehicleSoundComponent.h"
 #include "ImpactSound/ImpactSoundHandler.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Components/MusicPlayerComponent.h"
 #include "Subsystem/VehicleSoundSubsystem.h"
 #include "DynamicSound/EngineSoundLayer.h"
@@ -313,6 +314,10 @@ void UVehicleSoundComponent::GatherStateFromChaosVehicle()
 	float WorstSlip = 0.0f;
 	bool bAnySkidding = false;
 
+	// the surface under the wheel that is sliding hardest is the one being heard
+	float SlipOfSurfaceWheel = -1.0f;
+	ETireSurfaceType DetectedSurface = ETireSurfaceType::Asphalt;
+
 	const int32 NumWheels = CachedChaosVehicle->Wheels.Num();
 
 	for (int32 WheelIndex = 0; WheelIndex < NumWheels; ++WheelIndex)
@@ -324,9 +329,26 @@ void UVehicleSoundComponent::GatherStateFromChaosVehicle()
 			continue;
 		}
 
-		WorstSlip = FMath::Max(WorstSlip, FMath::Max(Wheel.SlipMagnitude, Wheel.SkidMagnitude));
+		const float WheelSlip = FMath::Max(Wheel.SlipMagnitude, Wheel.SkidMagnitude);
+
+		WorstSlip = FMath::Max(WorstSlip, WheelSlip);
 		bAnySkidding |= Wheel.bIsSkidding;
+
+		if (WheelSlip > SlipOfSurfaceWheel)
+		{
+			SlipOfSurfaceWheel = WheelSlip;
+
+			if (const UPhysicalMaterial* Material = Wheel.PhysMaterial.Get())
+			{
+				if (const ETireSurfaceType* Mapped = SurfaceTypeMapping.Find(Material->SurfaceType))
+				{
+					DetectedSurface = *Mapped;
+				}
+			}
+		}
 	}
+
+	CurrentState.TireSurface = DetectedSurface;
 
 	CurrentState.TireSlip = FMath::Clamp(WorstSlip / FMath::Max(TireSlipReference, 1.0f), 0.0f, 1.0f);
 	CurrentState.bTireSkidding = bAnySkidding;
