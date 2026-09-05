@@ -64,6 +64,15 @@ private:
 	/** Sliding speed of the most recent contact, fed to the scrape sound */
 	float CurrentScrapeSpeed = 0.0f;
 
+	/** Velocity and position from the previous frame, used to spot impacts as a sudden loss of
+	 *  speed and to tell a real collision from a teleport */
+	FVector PreviousVelocity = FVector::ZeroVector;
+	FVector PreviousLocation = FVector::ZeroVector;
+	bool bHasPreviousFrame = false;
+
+	/** Looks for an impact in this frame's change of velocity */
+	void DetectImpactFromVelocity(float DeltaTime);
+
 	/** Starts or updates the scrape loop for a contact sliding at the given speed */
 	void UpdateScrape(const FVector& Location, float SlidingSpeed);
 };

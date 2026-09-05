@@ -212,6 +212,18 @@ struct VEHICLESOUNDSYSTEM_API FImpactSoundConfig
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact", meta = (Units = "cm/s"))
 	float MaxImpactSpeed = 1500.0f;
 
+	/** Works out impacts from how sharply the vehicle's velocity changes, instead of waiting for
+	 *  contact events.
+	 *
+	 *  Contact callbacks are the obvious source but they cannot be relied on: with Chaos async
+	 *  physics (bSubsteppingAsync) the solver runs off the game thread and OnActorHit never
+	 *  arrives, so a car can hit a wall in total silence. A sudden loss of speed is unambiguous
+	 *  and needs nothing from the physics callback plumbing.
+	 *
+	 *  The cost is that there's no contact point or surface, so the sound plays at the vehicle. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact")
+	bool bDetectImpactsFromVelocity = true;
+
 	/** Turns on hit notifications for the owner's simulating components.
 	 *
 	 *  Physics bodies do not report contact unless asked to, and the flag is off by default, so

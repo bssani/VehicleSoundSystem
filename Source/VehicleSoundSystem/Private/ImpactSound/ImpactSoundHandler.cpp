@@ -61,6 +61,8 @@ void UImpactSoundHandler::Shutdown()
 
 void UImpactSoundHandler::Tick(float DeltaTime)
 {
+	DetectImpactFromVelocity(DeltaTime);
+
 	if (!ScrapeAudio || !ScrapeAudio->IsPlaying() || !SoundData || !OwningActor)
 	{
 		return;
@@ -227,5 +229,48 @@ void UImpactSoundHandler::UpdateScrape(const FVector& Location, float SlidingSpe
 	if (!ScrapeAudio->IsPlaying())
 	{
 		ScrapeAudio->Play();
+	}
+}
+
+void UImpactSoundHandler::DetectImpactFromVelocity(float DeltaTime)
+{
+	if (!SoundData || !OwningActor || !SoundData->ImpactConfig.bDetectImpactsFromVelocity || DeltaTime <= 0.0f)
+	{
+		return;
+	}
+
+	const FVector Velocity = OwningActor->GetVelocity();
+	const FVector Location = OwningActor->GetActorLocation();
+
+	// nothing to compare against on the first frame
+	if (!bHasPreviousFrame)
+	{
+		PreviousVelocity = Velocity;
+		PreviousLocation = Location;
+		bHasPreviousFrame = true;
+		return;
+	}
+
+	const float SpeedLost = (Velocity - PreviousVelocity).Size();
+	const float DistanceMoved = (Location - PreviousLocation).Size();
+
+	// a reset or respawn also zeroes velocity, which looks exactly like hitting a wall. Real
+	// motion covers roughly speed times delta time; a jump much larger than that was a teleport
+	const float PlausibleDistance = PreviousVelocity.Size() * DeltaTime * 2.0f + 100.0f;
+	const bool bTeleported = DistanceMoved > PlausibleDistance;
+
+	PreviousVelocity = Velocity;
+	PreviousLocation = Location;
+
+	if (bTeleported)
+	{
+		return;
+	}
+
+	// braking hard is on the order of tens of cm/s per frame; hitting something is hundreds, so
+	// the existing impact threshold separates them without needing a second number
+	if (SpeedLost >= SoundData->ImpactConfig.MinImpactSpeed)
+	{
+		ReportImpact(Location, SpeedLost);
 	}
 }
