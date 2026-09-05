@@ -3,6 +3,7 @@
 #include "VehicleSoundSystemModule.h"
 #include "Components/AudioComponent.h"
 #include "GameFramework/Actor.h"
+#include "MetasoundSource.h"
 
 void UDynamicSoundLayer::Initialize(UVehicleSoundComponent* InOwner, UDynamicSoundDataAsset* InDataAsset)
 {
@@ -69,6 +70,8 @@ UAudioComponent* UDynamicSoundLayer::CreateAudioComponent(USoundBase* Sound)
 		return nullptr;
 	}
 
+	bSourceIsMetaSound = Sound->IsA<UMetaSoundSource>();
+
 	NewAudioComp->SetSound(Sound);
 	NewAudioComp->bAutoActivate = false;
 	NewAudioComp->bAutoDestroy = false;
@@ -122,11 +125,24 @@ void UDynamicSoundLayer::SwapSound(USoundBase* NewSound)
 	}
 }
 
+FName UDynamicSoundLayer::ResolveParameterName(FName ParameterName) const
+{
+	if (DataAsset)
+	{
+		if (const FName* Override = DataAsset->ParameterNameOverrides.Find(ParameterName))
+		{
+			return *Override;
+		}
+	}
+
+	return ParameterName;
+}
+
 void UDynamicSoundLayer::SetMetaSoundParameter(FName ParameterName, float Value)
 {
 	if (AudioComponent)
 	{
-		AudioComponent->SetFloatParameter(ParameterName, Value);
+		AudioComponent->SetFloatParameter(ResolveParameterName(ParameterName), Value);
 	}
 }
 
@@ -134,6 +150,6 @@ void UDynamicSoundLayer::SetMetaSoundIntParameter(FName ParameterName, int32 Val
 {
 	if (AudioComponent)
 	{
-		AudioComponent->SetIntParameter(ParameterName, Value);
+		AudioComponent->SetIntParameter(ResolveParameterName(ParameterName), Value);
 	}
 }

@@ -50,6 +50,10 @@ protected:
 	/** Creates and configures the AudioComponent with the given SoundBase */
 	UAudioComponent* CreateAudioComponent(USoundBase* Sound);
 
+	/** Maps a parameter name through the data asset's overrides. Layers always send their own
+	 *  canonical names; this is what lets a third-party graph listen on different ones */
+	FName ResolveParameterName(FName ParameterName) const;
+
 	/** Helper to set a float parameter on the AudioComponent (MetaSound input) */
 	void SetMetaSoundParameter(FName ParameterName, float Value);
 
@@ -74,6 +78,10 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UAudioComponent> AudioComponent;
+
+	/** True when the assigned source is a MetaSound. A graph does its own pitch and mixing work,
+	 *  so the code-side fallbacks have to stand down or the two fight each other */
+	bool bSourceIsMetaSound = false;
 
 	float Volume = 1.0f;
 	bool bIsActive = false;

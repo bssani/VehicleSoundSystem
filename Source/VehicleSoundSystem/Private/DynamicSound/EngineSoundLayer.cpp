@@ -32,6 +32,8 @@ void UEngineSoundLayer::Update(float DeltaTime, const FVehicleSoundState& State)
 
 	SetMetaSoundParameter(FName("RPM"), State.RPM);
 	SetMetaSoundParameter(FName("NormalizedRPM"), NormalizedRPM);
+	// some engine graphs blend road speed in alongside revs
+	SetMetaSoundParameter(FName("Speed"), State.Speed);
 	SetMetaSoundParameter(FName("EngineLoad"), State.EngineLoad);
 	SetMetaSoundParameter(FName("Throttle"), State.ThrottleInput);
 	SetMetaSoundParameter(FName("Redline"), State.RPM >= Config.RedlineRPM ? 1.0f : 0.0f);
@@ -42,17 +44,20 @@ void UEngineSoundLayer::Update(float DeltaTime, const FVehicleSoundState& State)
 		AudioComponent->SetVolumeMultiplier(Volume * CurveVolume);
 	}
 
-	// Pitch is what actually makes an engine sound like an engine. With a MetaSound graph the
-	// graph usually owns this, but a layer pointed at a plain looping sample has nothing else to
-	// do it, and the result is a flat drone no matter how good the sample is.
-	if (Config.RPMToPitchCurve)
+	// Pitch is what makes an engine sound like an engine. A MetaSound graph does this itself from
+	// the RPM we just sent, so touching the component pitch on top would shift it twice. Only the
+	// plain-sample path needs us to do it.
+	if (!bSourceIsMetaSound)
 	{
-		SetPlaybackPitch(Config.RPMToPitchCurve->GetFloatValue(State.RPM));
-	}
-	else
-	{
-		// no curve authored: fall back to playing the loop faster as revs rise, which is a
-		// usable approximation for a single-sample engine
-		SetPlaybackPitch(FMath::Lerp(1.0f, Config.PitchAtMaxRPM, NormalizedRPM));
+		if (Config.RPMToPitchCurve)
+		{
+			SetPlaybackPitch(Config.RPMToPitchCurve->GetFloatValue(State.RPM));
+		}
+		else
+		{
+			// no curve authored: play the loop faster as revs rise, which is a usable
+			// approximation for a single-sample engine
+			SetPlaybackPitch(FMath::Lerp(1.0f, Config.PitchAtMaxRPM, NormalizedRPM));
+		}
 	}
 }

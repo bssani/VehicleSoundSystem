@@ -30,6 +30,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Audio Settings")
 	TObjectPtr<USoundAttenuation> Attenuation;
 
+	/** Renames the parameters this asset's layers send, so a MetaSound written for some other
+	 *  system can be used without touching code. Key is the name the layer sends, value is the
+	 *  name the graph listens on - for example Slip -> OnSlip, SurfaceType -> Surface.
+	 *  Anything not listed is sent under its own name. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MetaSound")
+	TMap<FName, FName> ParameterNameOverrides;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Audio Settings")
 	TObjectPtr<USoundConcurrency> Concurrency;
 
