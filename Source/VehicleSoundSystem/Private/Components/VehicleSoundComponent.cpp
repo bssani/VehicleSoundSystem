@@ -101,6 +101,12 @@ void UVehicleSoundComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 	UpdateLOD();
 	UpdateDynamicLayers(DeltaTime);
+
+	// the scrape has to be told when contact stopped; nothing reports the absence of a hit
+	if (ImpactHandler)
+	{
+		ImpactHandler->Tick(DeltaTime);
+	}
 }
 
 void UVehicleSoundComponent::UpdateLOD()

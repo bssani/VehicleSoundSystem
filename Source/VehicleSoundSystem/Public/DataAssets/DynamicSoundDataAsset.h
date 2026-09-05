@@ -4,6 +4,7 @@
 #include "DataAssets/VehicleSoundDataAsset.h"
 #include "Sound/SoundWave.h"
 #include "Curves/CurveFloat.h"
+#include "Sound/SoundAttenuation.h"
 #include "DynamicSoundDataAsset.generated.h"
 
 /** Configuration for engine sound (ICE or EV) */
@@ -49,6 +50,13 @@ struct VEHICLESOUNDSYSTEM_API FEngineSoundConfig
 	 *  code reads this; the graph holds its own references. Safe to leave empty */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Engine", AdvancedDisplay)
 	TArray<TObjectPtr<USoundWave>> EngineSamples;
+
+	/** Falloff for this layer. Different sounds carry different distances - an impact reaches
+	 *  much further than tyre roll - so each layer can override the asset-wide setting.
+	 *  Leave empty to use the data asset's Attenuation */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Engine")
+	TObjectPtr<USoundAttenuation> AttenuationOverride;
+
 };
 
 /** Configuration for exhaust sound (ICE only) */
@@ -66,6 +74,13 @@ struct VEHICLESOUNDSYSTEM_API FExhaustSoundConfig
 	/** As with EngineSamples, a place to keep what the graph blends. Not read by code */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Exhaust", AdvancedDisplay)
 	TArray<TObjectPtr<USoundWave>> ExhaustSamples;
+
+	/** Falloff for this layer. Different sounds carry different distances - an impact reaches
+	 *  much further than tyre roll - so each layer can override the asset-wide setting.
+	 *  Leave empty to use the data asset's Attenuation */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Exhaust")
+	TObjectPtr<USoundAttenuation> AttenuationOverride;
+
 };
 
 /** Configuration for tire/road noise */
@@ -80,10 +95,17 @@ struct VEHICLESOUNDSYSTEM_API FTireSoundConfig
 	/** One loop per surface, used only when no MetaSound is assigned above: the layer switches
 	 *  between them as the ground changes. A graph would crossfade instead */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tire", meta = (EditCondition = "MetaSoundSource == nullptr"))
-	TMap<ETireSurfaceType, TObjectPtr<USoundWave>> SurfaceSounds;
+	TMap<ETireSurfaceType, TObjectPtr<USoundBase>> SurfaceSounds;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tire")
 	TObjectPtr<UCurveFloat> SpeedToTireVolume;
+
+	/** Falloff for this layer. Different sounds carry different distances - an impact reaches
+	 *  much further than tyre roll - so each layer can override the asset-wide setting.
+	 *  Leave empty to use the data asset's Attenuation */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tire")
+	TObjectPtr<USoundAttenuation> AttenuationOverride;
+
 };
 
 /** Configuration for aerodynamic wind noise */
@@ -101,6 +123,13 @@ struct VEHICLESOUNDSYSTEM_API FWindSoundConfig
 	/** Speed (km/h) at which wind sound becomes audible */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Wind")
 	float OnsetSpeedKmh = 40.0f;
+
+	/** Falloff for this layer. Different sounds carry different distances - an impact reaches
+	 *  much further than tyre roll - so each layer can override the asset-wide setting.
+	 *  Leave empty to use the data asset's Attenuation */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Wind")
+	TObjectPtr<USoundAttenuation> AttenuationOverride;
+
 };
 
 /** Configuration for transmission/gearbox sounds */
@@ -113,11 +142,19 @@ struct VEHICLESOUNDSYSTEM_API FTransmissionSoundConfig
 	TObjectPtr<USoundBase> MetaSoundSource;
 
 	/** One-shot sounds for gear shift events */
+	/** Played on a gear change. SoundBase rather than SoundWave so a cue or MetaSound works too */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Transmission")
-	TArray<TObjectPtr<USoundWave>> GearShiftSounds;
+	TArray<TObjectPtr<USoundBase>> GearShiftSounds;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Transmission")
 	TObjectPtr<UCurveFloat> RPMToWhineVolume;
+
+	/** Falloff for this layer. Different sounds carry different distances - an impact reaches
+	 *  much further than tyre roll - so each layer can override the asset-wide setting.
+	 *  Leave empty to use the data asset's Attenuation */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Transmission")
+	TObjectPtr<USoundAttenuation> AttenuationOverride;
+
 };
 
 /** Configuration for collision/impact sounds */
@@ -154,6 +191,32 @@ struct VEHICLESOUNDSYSTEM_API FImpactSoundConfig
 	/** Pitch for a heavy crash. Below 1 reads as large and heavy */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact", meta = (ClampMin = "0.1"))
 	float PitchAtHeavyImpact = 0.85f;
+
+	/** Looping sound for sliding along a surface. Hitting a wall and scraping down it are
+	 *  different sounds, and one-shots alone can only ever give the first. A MetaSound here is
+	 *  sent Speed and Volume */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Scrape")
+	TObjectPtr<USoundBase> ScrapeSound;
+
+	/** Sliding speed below which a contact isn't scraping, just resting against something */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Scrape", meta = (Units = "cm/s"))
+	float MinScrapeSpeed = 100.0f;
+
+	/** Sliding speed treated as a full-volume scrape */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Scrape", meta = (Units = "cm/s"))
+	float MaxScrapeSpeed = 1200.0f;
+
+	/** How long after the last contact the scrape keeps going. Contact events are intermittent
+	 *  even while genuinely sliding, so stopping the instant one is missed makes it stutter */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Scrape", meta = (Units = "s"))
+	float ScrapeStopDelay = 0.15f;
+
+	/** Falloff for this layer. Different sounds carry different distances - an impact reaches
+	 *  much further than tyre roll - so each layer can override the asset-wide setting.
+	 *  Leave empty to use the data asset's Attenuation */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Scrape")
+	TObjectPtr<USoundAttenuation> AttenuationOverride;
+
 };
 
 /**

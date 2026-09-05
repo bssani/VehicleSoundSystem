@@ -9,7 +9,7 @@ void UTransmissionSoundLayer::Initialize(UVehicleSoundComponent* InOwner, UDynam
 
 	if (DataAsset)
 	{
-		AudioComponent = CreateAudioComponent(DataAsset->TransmissionConfig.MetaSoundSource);
+		AudioComponent = CreateAudioComponent(DataAsset->TransmissionConfig.MetaSoundSource, DataAsset->TransmissionConfig.AttenuationOverride);
 	}
 }
 
@@ -45,7 +45,7 @@ void UTransmissionSoundLayer::PlayGearShiftSound()
 		return;
 	}
 
-	const TArray<TObjectPtr<USoundWave>>& ShiftSounds = DataAsset->TransmissionConfig.GearShiftSounds;
+	const TArray<TObjectPtr<USoundBase>>& ShiftSounds = DataAsset->TransmissionConfig.GearShiftSounds;
 	if (ShiftSounds.Num() == 0)
 	{
 		return;

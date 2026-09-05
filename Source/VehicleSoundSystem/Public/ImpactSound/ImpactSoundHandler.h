@@ -28,6 +28,10 @@ public:
 
 	void Shutdown();
 
+	/** Fades out the scrape once contact stops. Contact only reports while it is happening, so
+	 *  something has to notice when it stops */
+	void Tick(float DeltaTime);
+
 	/** Plays an impact of the given strength in cm/s at a world location. Exposed so a vehicle
 	 *  that resolves its own collisions can report them instead of relying on hit events */
 	UFUNCTION(BlueprintCallable, Category = "Vehicle Sound|Impact")
@@ -49,4 +53,17 @@ private:
 
 	/** Time of the last impact, used to rate limit continuous contact */
 	double LastImpactTime = 0.0;
+
+	/** Loop played while sliding along something. Created on the first scrape */
+	UPROPERTY()
+	TObjectPtr<UAudioComponent> ScrapeAudio;
+
+	/** Time of the last sliding contact, used to decide when the scrape has ended */
+	double LastScrapeTime = 0.0;
+
+	/** Sliding speed of the most recent contact, fed to the scrape sound */
+	float CurrentScrapeSpeed = 0.0f;
+
+	/** Starts or updates the scrape loop for a contact sliding at the given speed */
+	void UpdateScrape(const FVector& Location, float SlidingSpeed);
 };

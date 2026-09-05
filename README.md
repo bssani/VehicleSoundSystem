@@ -11,7 +11,7 @@ Chaos Vehicle 기반 차량 사운드 플러그인. 엔진/타이어/바람 등 
 UVehicleSoundComponent      차량 액터에 붙이는 컴포넌트
   DynamicSoundLayer         주행음 베이스
     Engine / EVMotor / Exhaust / Tire / Wind / Transmission
-  ImpactSoundHandler        충돌음. 오너의 히트 이벤트를 직접 받는다
+  ImpactSoundHandler        충돌음과 긁힘. 오너의 히트 이벤트를 직접 받는다
   InteractionSoundHandler   도어·경적·방향지시등 등 원샷
   InfotainmentSoundHandler  UI음, 음악 플레이어
 UVehicleSoundSubsystem      전역 볼륨, 차량 등록
@@ -63,6 +63,11 @@ MetaSound 그래프가 없어도 동작한다. 레이어에 일반 `SoundWave` �
 1. `Engine Config > MetaSoundSource` — 엔진 루프 하나
 2. `Tire Config > MetaSoundSource` 또는 `SurfaceSounds > Asphalt`
 3. `Impact Config > ImpactSounds` — 약한 것부터 강한 것 순으로
+
+**감쇠는 반드시 채운다.** 비워두면 3D 감쇠가 걸리지 않아 거리도 방향도 도플러도
+없이 들린다. 여러 차량이 나오는 장면에서는 이것 하나로 체감이 갈린다. 레이어마다
+`AttenuationOverride`로 따로 줄 수 있고, 비우면 에셋 공통값을 쓴다. 충돌음은 트랙
+반대편까지 가야 하지만 타이어 구름소리는 몇 미터면 되므로 같은 값을 쓰기 어렵다.
 
 나머지 숫자 값들은 기본값이 들어 있고, 차량에 맞춰 조정하는 용도다. 엔진의
 `IdleRPM`/`MaxRPM`/`RedlineRPM`은 **차량의 실제 설정과 맞춰야** 피치가 회전수와

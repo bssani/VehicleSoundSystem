@@ -7,7 +7,7 @@ void UEngineSoundLayer::Initialize(UVehicleSoundComponent* InOwner, UDynamicSoun
 
 	if (DataAsset)
 	{
-		AudioComponent = CreateAudioComponent(DataAsset->EngineConfig.MetaSoundSource);
+		AudioComponent = CreateAudioComponent(DataAsset->EngineConfig.MetaSoundSource, DataAsset->EngineConfig.AttenuationOverride);
 	}
 }
 

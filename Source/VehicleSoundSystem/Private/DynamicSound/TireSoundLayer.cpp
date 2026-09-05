@@ -16,13 +16,13 @@ void UTireSoundLayer::Initialize(UVehicleSoundComponent* InOwner, UDynamicSoundD
 
 	if (!Source)
 	{
-		if (TObjectPtr<USoundWave>* Fallback = DataAsset->TireConfig.SurfaceSounds.Find(ETireSurfaceType::Asphalt))
+		if (TObjectPtr<USoundBase>* Fallback = DataAsset->TireConfig.SurfaceSounds.Find(ETireSurfaceType::Asphalt))
 		{
 			Source = *Fallback;
 		}
 	}
 
-	AudioComponent = CreateAudioComponent(Source);
+	AudioComponent = CreateAudioComponent(Source, DataAsset->TireConfig.AttenuationOverride);
 	bUsingSurfaceSamples = DataAsset->TireConfig.MetaSoundSource == nullptr;
 }
 
@@ -43,7 +43,7 @@ void UTireSoundLayer::Update(float DeltaTime, const FVehicleSoundState& State)
 	// with no graph to crossfade them, swap the sample when the surface underfoot changes
 	if (bUsingSurfaceSamples && State.TireSurface != LastSurface)
 	{
-		if (const TObjectPtr<USoundWave>* SurfaceSound = Config.SurfaceSounds.Find(State.TireSurface))
+		if (const TObjectPtr<USoundBase>* SurfaceSound = Config.SurfaceSounds.Find(State.TireSurface))
 		{
 			SwapSound(*SurfaceSound);
 		}

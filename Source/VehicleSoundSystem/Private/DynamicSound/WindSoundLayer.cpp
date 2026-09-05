@@ -7,7 +7,7 @@ void UWindSoundLayer::Initialize(UVehicleSoundComponent* InOwner, UDynamicSoundD
 
 	if (DataAsset)
 	{
-		AudioComponent = CreateAudioComponent(DataAsset->WindConfig.MetaSoundSource);
+		AudioComponent = CreateAudioComponent(DataAsset->WindConfig.MetaSoundSource, DataAsset->WindConfig.AttenuationOverride);
 	}
 }
 

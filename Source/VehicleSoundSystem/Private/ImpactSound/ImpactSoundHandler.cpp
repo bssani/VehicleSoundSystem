@@ -3,6 +3,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Actor.h"
 #include "Engine/World.h"
+#include "Components/AudioComponent.h"
 
 void UImpactSoundHandler::Initialize(AActor* InOwner, UDynamicSoundDataAsset* InDataAsset)
 {
@@ -22,7 +23,37 @@ void UImpactSoundHandler::Shutdown()
 		OwningActor->OnActorHit.RemoveDynamic(this, &UImpactSoundHandler::HandleActorHit);
 	}
 
+	if (ScrapeAudio)
+	{
+		ScrapeAudio->Stop();
+		ScrapeAudio->DestroyComponent();
+		ScrapeAudio = nullptr;
+	}
+
 	OwningActor = nullptr;
+}
+
+void UImpactSoundHandler::Tick(float DeltaTime)
+{
+	if (!ScrapeAudio || !ScrapeAudio->IsPlaying() || !SoundData || !OwningActor)
+	{
+		return;
+	}
+
+	const UWorld* World = OwningActor->GetWorld();
+
+	if (!World)
+	{
+		return;
+	}
+
+	// contact reports arrive in bursts even during a continuous slide, so the scrape only ends
+	// once nothing has been reported for a while
+	if (World->GetTimeSeconds() - LastScrapeTime > SoundData->ImpactConfig.ScrapeStopDelay)
+	{
+		ScrapeAudio->Stop();
+		CurrentScrapeSpeed = 0.0f;
+	}
 }
 
 void UImpactSoundHandler::HandleActorHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit)
@@ -37,7 +68,12 @@ void UImpactSoundHandler::HandleActorHit(AActor* SelfActor, AActor* OtherActor, 
 	const FVector RelativeVelocity = SelfActor->GetVelocity() - (OtherActor ? OtherActor->GetVelocity() : FVector::ZeroVector);
 	const float ClosingSpeed = FMath::Abs(FVector::DotProduct(RelativeVelocity, Hit.ImpactNormal));
 
+	// whatever isn't going into the surface is going along it. Hitting a wall and sliding down it
+	// are the same event split between these two numbers
+	const FVector SlidingVelocity = RelativeVelocity - FVector::DotProduct(RelativeVelocity, Hit.ImpactNormal) * Hit.ImpactNormal;
+
 	ReportImpact(Hit.ImpactPoint, ClosingSpeed);
+	UpdateScrape(Hit.ImpactPoint, SlidingVelocity.Size());
 }
 
 void UImpactSoundHandler::ReportImpact(const FVector& Location, float ImpactSpeed)
@@ -98,9 +134,72 @@ void UImpactSoundHandler::ReportImpact(const FVector& Location, float ImpactSpee
 		ImpactVolume,
 		ImpactPitch,
 		0.0f,
-		SoundData->Attenuation,
+		Config.AttenuationOverride ? Config.AttenuationOverride.Get() : SoundData->Attenuation.Get(),
 		SoundData->Concurrency);
 
 	UE_LOG(LogVehicleSoundSystem, Verbose, TEXT("Impact at %.0f cm/s (severity %.2f) on %s"),
 		ImpactSpeed, Severity, *OwningActor->GetName());
+}
+
+void UImpactSoundHandler::UpdateScrape(const FVector& Location, float SlidingSpeed)
+{
+	if (!SoundData || !OwningActor)
+	{
+		return;
+	}
+
+	const FImpactSoundConfig& Config = SoundData->ImpactConfig;
+
+	if (!Config.ScrapeSound || SlidingSpeed < Config.MinScrapeSpeed)
+	{
+		return;
+	}
+
+	const UWorld* World = OwningActor->GetWorld();
+
+	if (!World)
+	{
+		return;
+	}
+
+	LastScrapeTime = World->GetTimeSeconds();
+	CurrentScrapeSpeed = SlidingSpeed;
+
+	if (!ScrapeAudio)
+	{
+		ScrapeAudio = UGameplayStatics::SpawnSoundAttached(
+			Config.ScrapeSound,
+			OwningActor->GetRootComponent(),
+			NAME_None,
+			FVector::ZeroVector,
+			EAttachLocation::KeepRelativeOffset,
+			false,
+			1.0f,
+			1.0f,
+			0.0f,
+			Config.AttenuationOverride ? Config.AttenuationOverride.Get() : SoundData->Attenuation.Get(),
+			SoundData->Concurrency,
+			false);
+
+		if (!ScrapeAudio)
+		{
+			return;
+		}
+	}
+
+	// follows the contact point rather than the car, so a scrape down the driver's side is heard
+	// on that side
+	ScrapeAudio->SetWorldLocation(Location);
+
+	const float SpeedRange = FMath::Max(Config.MaxScrapeSpeed - Config.MinScrapeSpeed, 1.0f);
+	const float Intensity = FMath::Clamp((SlidingSpeed - Config.MinScrapeSpeed) / SpeedRange, 0.0f, 1.0f);
+
+	ScrapeAudio->SetFloatParameter(FName("Speed"), SlidingSpeed);
+	ScrapeAudio->SetFloatParameter(FName("Volume"), Intensity);
+	ScrapeAudio->SetVolumeMultiplier(VolumeMultiplier * Intensity);
+
+	if (!ScrapeAudio->IsPlaying())
+	{
+		ScrapeAudio->Play();
+	}
 }

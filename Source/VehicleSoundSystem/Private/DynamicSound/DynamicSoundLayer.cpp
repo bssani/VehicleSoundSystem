@@ -49,7 +49,7 @@ void UDynamicSoundLayer::BeginDestroy()
 	Super::BeginDestroy();
 }
 
-UAudioComponent* UDynamicSoundLayer::CreateAudioComponent(USoundBase* Sound)
+UAudioComponent* UDynamicSoundLayer::CreateAudioComponent(USoundBase* Sound, USoundAttenuation* AttenuationOverride)
 {
 	if (!Sound)
 	{
@@ -84,9 +84,11 @@ UAudioComponent* UDynamicSoundLayer::CreateAudioComponent(USoundBase* Sound)
 		{
 			NewAudioComp->SoundClassOverride = DataAsset->SoundClass;
 		}
-		if (DataAsset->Attenuation)
+		USoundAttenuation* Attenuation = AttenuationOverride ? AttenuationOverride : DataAsset->Attenuation.Get();
+
+		if (Attenuation)
 		{
-			NewAudioComp->AttenuationSettings = DataAsset->Attenuation;
+			NewAudioComp->AttenuationSettings = Attenuation;
 		}
 		if (DataAsset->Concurrency)
 		{

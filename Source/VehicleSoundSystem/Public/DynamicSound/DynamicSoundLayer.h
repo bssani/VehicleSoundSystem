@@ -48,7 +48,7 @@ public:
 
 protected:
 	/** Creates and configures the AudioComponent with the given SoundBase */
-	UAudioComponent* CreateAudioComponent(USoundBase* Sound);
+	UAudioComponent* CreateAudioComponent(USoundBase* Sound, USoundAttenuation* AttenuationOverride = nullptr);
 
 	/** Maps a parameter name through the data asset's overrides. Layers always send their own
 	 *  canonical names; this is what lets a third-party graph listen on different ones */
