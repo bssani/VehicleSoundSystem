@@ -2,6 +2,7 @@
 #include "VehicleSoundSystemModule.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Actor.h"
+#include "Components/PrimitiveComponent.h"
 #include "Engine/World.h"
 #include "Components/AudioComponent.h"
 
@@ -10,9 +11,34 @@ void UImpactSoundHandler::Initialize(AActor* InOwner, UDynamicSoundDataAsset* In
 	OwningActor = InOwner;
 	SoundData = InDataAsset;
 
-	if (OwningActor)
+	if (!OwningActor)
 	{
-		OwningActor->OnActorHit.AddDynamic(this, &UImpactSoundHandler::HandleActorHit);
+		return;
+	}
+
+	OwningActor->OnActorHit.AddDynamic(this, &UImpactSoundHandler::HandleActorHit);
+
+	if (!SoundData || !SoundData->ImpactConfig.bEnableHitEventsOnOwner)
+	{
+		return;
+	}
+
+	// A physics body stays silent about its collisions unless told to report them, and the flag
+	// is off by default. Leaving that to whoever sets up the vehicle means impact sounds usually
+	// just don't happen, with nothing in the log to explain it.
+	TInlineComponentArray<UPrimitiveComponent*> Primitives;
+	OwningActor->GetComponents(Primitives);
+
+	for (UPrimitiveComponent* Primitive : Primitives)
+	{
+		if (Primitive && Primitive->IsSimulatingPhysics() && !Primitive->BodyInstance.bNotifyRigidBodyCollision)
+		{
+			Primitive->SetNotifyRigidBodyCollision(true);
+
+			UE_LOG(LogVehicleSoundSystem, Log,
+				TEXT("ImpactSoundHandler: enabled hit notifications on '%s' so collisions can be heard."),
+				*Primitive->GetName());
+		}
 	}
 }
 

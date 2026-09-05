@@ -212,6 +212,14 @@ struct VEHICLESOUNDSYSTEM_API FImpactSoundConfig
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact", meta = (Units = "cm/s"))
 	float MaxImpactSpeed = 1500.0f;
 
+	/** Turns on hit notifications for the owner's simulating components.
+	 *
+	 *  Physics bodies do not report contact unless asked to, and the flag is off by default, so
+	 *  without this the collision sounds never fire and nothing says why. Switch it off if the
+	 *  project manages that flag itself. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact")
+	bool bEnableHitEventsOnOwner = true;
+
 	/** Rate limit. Chaos reports contact every frame while bodies stay touching */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact", meta = (Units = "s"))
 	float MinTimeBetweenImpacts = 0.12f;
