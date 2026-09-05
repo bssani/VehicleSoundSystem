@@ -49,7 +49,7 @@ void UDynamicSoundLayer::BeginDestroy()
 	Super::BeginDestroy();
 }
 
-UAudioComponent* UDynamicSoundLayer::CreateAudioComponent(USoundBase* Sound, USoundAttenuation* AttenuationOverride)
+UAudioComponent* UDynamicSoundLayer::CreateAudioComponent(USoundBase* Sound, USoundAttenuation* AttenuationOverride, USoundConcurrency* ConcurrencyOverride)
 {
 	if (!Sound)
 	{
@@ -72,6 +72,18 @@ UAudioComponent* UDynamicSoundLayer::CreateAudioComponent(USoundBase* Sound, USo
 
 	bSourceIsMetaSound = Sound->IsA<UMetaSoundSource>();
 
+	// These layers run for as long as the vehicle exists. Handed a one-shot they play it once and
+	// fall silent for the rest of the session, which looks like the layer never worked at all.
+	// Environment cues are the usual trap: they sound like loops but are a fixed length.
+	// MetaSound graphs run until stopped, and report a placeholder duration rather than looping,
+	// so they are exempt from the check.
+	if (!bSourceIsMetaSound && !Sound->IsLooping())
+	{
+		UE_LOG(LogVehicleSoundSystem, Warning,
+			TEXT("DynamicSoundLayer: '%s' is %.1fs long and does not loop, so layer type %d will go quiet once it ends. Continuous layers need a looping sound."),
+			*Sound->GetName(), Sound->GetDuration(), static_cast<int32>(GetLayerType()));
+	}
+
 	NewAudioComp->SetSound(Sound);
 	NewAudioComp->bAutoActivate = false;
 	NewAudioComp->bAutoDestroy = false;
@@ -90,9 +102,11 @@ UAudioComponent* UDynamicSoundLayer::CreateAudioComponent(USoundBase* Sound, USo
 		{
 			NewAudioComp->AttenuationSettings = Attenuation;
 		}
-		if (DataAsset->Concurrency)
+		USoundConcurrency* Concurrency = ConcurrencyOverride ? ConcurrencyOverride : DataAsset->Concurrency.Get();
+
+		if (Concurrency)
 		{
-			NewAudioComp->ConcurrencySet.Add(DataAsset->Concurrency);
+			NewAudioComp->ConcurrencySet.Add(Concurrency);
 		}
 	}
 

@@ -135,7 +135,7 @@ void UImpactSoundHandler::ReportImpact(const FVector& Location, float ImpactSpee
 		ImpactPitch,
 		0.0f,
 		Config.AttenuationOverride ? Config.AttenuationOverride.Get() : SoundData->Attenuation.Get(),
-		SoundData->Concurrency);
+		Config.ConcurrencyOverride ? Config.ConcurrencyOverride.Get() : SoundData->Concurrency.Get());
 
 	UE_LOG(LogVehicleSoundSystem, Verbose, TEXT("Impact at %.0f cm/s (severity %.2f) on %s"),
 		ImpactSpeed, Severity, *OwningActor->GetName());
@@ -178,7 +178,7 @@ void UImpactSoundHandler::UpdateScrape(const FVector& Location, float SlidingSpe
 			1.0f,
 			0.0f,
 			Config.AttenuationOverride ? Config.AttenuationOverride.Get() : SoundData->Attenuation.Get(),
-			SoundData->Concurrency,
+			Config.ConcurrencyOverride ? Config.ConcurrencyOverride.Get() : SoundData->Concurrency.Get(),
 			false);
 
 		if (!ScrapeAudio)

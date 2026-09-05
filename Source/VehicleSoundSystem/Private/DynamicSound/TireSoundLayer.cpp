@@ -22,7 +22,7 @@ void UTireSoundLayer::Initialize(UVehicleSoundComponent* InOwner, UDynamicSoundD
 		}
 	}
 
-	AudioComponent = CreateAudioComponent(Source, DataAsset->TireConfig.AttenuationOverride);
+	AudioComponent = CreateAudioComponent(Source, DataAsset->TireConfig.AttenuationOverride, DataAsset->TireConfig.ConcurrencyOverride);
 	bUsingSurfaceSamples = DataAsset->TireConfig.MetaSoundSource == nullptr;
 }
 

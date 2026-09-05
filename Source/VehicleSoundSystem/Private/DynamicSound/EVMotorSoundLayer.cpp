@@ -7,7 +7,7 @@ void UEVMotorSoundLayer::Initialize(UVehicleSoundComponent* InOwner, UDynamicSou
 
 	if (DataAsset)
 	{
-		AudioComponent = CreateAudioComponent(DataAsset->EngineConfig.MetaSoundSource, DataAsset->EngineConfig.AttenuationOverride);
+		AudioComponent = CreateAudioComponent(DataAsset->EngineConfig.MetaSoundSource, DataAsset->EngineConfig.AttenuationOverride, DataAsset->EngineConfig.ConcurrencyOverride);
 	}
 }
 

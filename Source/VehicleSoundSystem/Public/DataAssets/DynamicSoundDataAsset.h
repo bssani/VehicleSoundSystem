@@ -5,6 +5,7 @@
 #include "Sound/SoundWave.h"
 #include "Curves/CurveFloat.h"
 #include "Sound/SoundAttenuation.h"
+#include "Sound/SoundConcurrency.h"
 #include "DynamicSoundDataAsset.generated.h"
 
 /** Configuration for engine sound (ICE or EV) */
@@ -57,6 +58,13 @@ struct VEHICLESOUNDSYSTEM_API FEngineSoundConfig
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Engine")
 	TObjectPtr<USoundAttenuation> AttenuationOverride;
 
+	/** Voice limiting for this layer. A concurrency written for one kind of sound must not be
+	 *  applied to the rest: a four-voice cap meant for backfire pops will silence engines if it
+	 *  is shared. Leave empty to use the data asset's Concurrency */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Engine")
+	TObjectPtr<USoundConcurrency> ConcurrencyOverride;
+
+
 };
 
 /** Configuration for exhaust sound (ICE only) */
@@ -80,6 +88,13 @@ struct VEHICLESOUNDSYSTEM_API FExhaustSoundConfig
 	 *  Leave empty to use the data asset's Attenuation */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Exhaust")
 	TObjectPtr<USoundAttenuation> AttenuationOverride;
+
+	/** Voice limiting for this layer. A concurrency written for one kind of sound must not be
+	 *  applied to the rest: a four-voice cap meant for backfire pops will silence engines if it
+	 *  is shared. Leave empty to use the data asset's Concurrency */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Exhaust")
+	TObjectPtr<USoundConcurrency> ConcurrencyOverride;
+
 
 };
 
@@ -106,6 +121,13 @@ struct VEHICLESOUNDSYSTEM_API FTireSoundConfig
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tire")
 	TObjectPtr<USoundAttenuation> AttenuationOverride;
 
+	/** Voice limiting for this layer. A concurrency written for one kind of sound must not be
+	 *  applied to the rest: a four-voice cap meant for backfire pops will silence engines if it
+	 *  is shared. Leave empty to use the data asset's Concurrency */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tire")
+	TObjectPtr<USoundConcurrency> ConcurrencyOverride;
+
+
 };
 
 /** Configuration for aerodynamic wind noise */
@@ -129,6 +151,13 @@ struct VEHICLESOUNDSYSTEM_API FWindSoundConfig
 	 *  Leave empty to use the data asset's Attenuation */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Wind")
 	TObjectPtr<USoundAttenuation> AttenuationOverride;
+
+	/** Voice limiting for this layer. A concurrency written for one kind of sound must not be
+	 *  applied to the rest: a four-voice cap meant for backfire pops will silence engines if it
+	 *  is shared. Leave empty to use the data asset's Concurrency */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Wind")
+	TObjectPtr<USoundConcurrency> ConcurrencyOverride;
+
 
 };
 
@@ -154,6 +183,13 @@ struct VEHICLESOUNDSYSTEM_API FTransmissionSoundConfig
 	 *  Leave empty to use the data asset's Attenuation */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Transmission")
 	TObjectPtr<USoundAttenuation> AttenuationOverride;
+
+	/** Voice limiting for this layer. A concurrency written for one kind of sound must not be
+	 *  applied to the rest: a four-voice cap meant for backfire pops will silence engines if it
+	 *  is shared. Leave empty to use the data asset's Concurrency */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Transmission")
+	TObjectPtr<USoundConcurrency> ConcurrencyOverride;
+
 
 };
 
@@ -216,6 +252,13 @@ struct VEHICLESOUNDSYSTEM_API FImpactSoundConfig
 	 *  Leave empty to use the data asset's Attenuation */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Scrape")
 	TObjectPtr<USoundAttenuation> AttenuationOverride;
+
+	/** Voice limiting for this layer. A concurrency written for one kind of sound must not be
+	 *  applied to the rest: a four-voice cap meant for backfire pops will silence engines if it
+	 *  is shared. Leave empty to use the data asset's Concurrency */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Scrape")
+	TObjectPtr<USoundConcurrency> ConcurrencyOverride;
+
 
 };
 

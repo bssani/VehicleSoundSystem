@@ -9,7 +9,7 @@ void UTransmissionSoundLayer::Initialize(UVehicleSoundComponent* InOwner, UDynam
 
 	if (DataAsset)
 	{
-		AudioComponent = CreateAudioComponent(DataAsset->TransmissionConfig.MetaSoundSource, DataAsset->TransmissionConfig.AttenuationOverride);
+		AudioComponent = CreateAudioComponent(DataAsset->TransmissionConfig.MetaSoundSource, DataAsset->TransmissionConfig.AttenuationOverride, DataAsset->TransmissionConfig.ConcurrencyOverride);
 	}
 }
 
