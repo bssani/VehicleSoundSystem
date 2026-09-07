@@ -68,10 +68,17 @@ void UTireSoundLayer::Update(float DeltaTime, const FVehicleSoundState& State)
 	SetMetaSoundParameter(FName("FlatTire"), State.TireFlatFraction);
 	SetMetaSoundParameter(FName("NoTire"), State.TireMissingFraction);
 
-	// and it wants telling when the choice has changed rather than watching for it itself
-	if (!bSentFirstUpdate || bSlipping != bWasSlipping || State.TireSurface != LastSurface)
+	// and it wants telling when the choice has changed rather than watching for it itself, one
+	// frame later so the values it re-picks from are the new ones
+	if (bUpdatePending)
 	{
 		SetMetaSoundTrigger(FName("UpdateSound"));
+		bUpdatePending = false;
+	}
+
+	if (!bSentFirstUpdate || bSlipping != bWasSlipping || State.TireSurface != LastSurface)
+	{
+		bUpdatePending = true;
 		bSentFirstUpdate = true;
 		bWasSlipping = bSlipping;
 		LastSurface = State.TireSurface;

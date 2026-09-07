@@ -368,6 +368,12 @@ void UVehicleSoundComponent::GatherStateFromChaosVehicle()
 	CurrentState.bTireSliding = CurrentState.bTireSliding
 		? WorstSlip > TireSlipThreshold * TireSlipReleaseRatio
 		: WorstSlip > TireSlipThreshold;
+
+	if (SlipOverride >= 0.0f)
+	{
+		CurrentState.TireSlip = FMath::Clamp(SlipOverride, 0.0f, 1.0f);
+		CurrentState.bTireSliding = CurrentState.TireSlip > KINDA_SMALL_NUMBER;
+	}
 	CurrentState.bTireSkidding = bAnySkidding;
 }
 

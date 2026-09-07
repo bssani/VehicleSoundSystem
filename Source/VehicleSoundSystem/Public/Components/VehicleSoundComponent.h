@@ -67,6 +67,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound|Config", meta = (ClampMin = "0.0"))
 	float TireSlipThreshold = 60.0f;
 
+	/** Pins tyre slip to a fixed value, ignoring the wheels. Negative leaves it alone. Driven by
+	 *  vs.ForceSlip: pinning it answers whether a graph reacts to slip at all, which is otherwise
+	 *  impossible to tell apart from slip never being high enough to hear */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound|Debug")
+	float SlipOverride = -1.0f;
+
 	/** How far slip has to fall back below the threshold before the tyres count as gripping again,
 	 *  as a fraction of it. Without this gap a car balanced on the limit flickers between rolling
 	 *  and sliding, and a layer that swaps sounds on that switch swaps them every few frames */

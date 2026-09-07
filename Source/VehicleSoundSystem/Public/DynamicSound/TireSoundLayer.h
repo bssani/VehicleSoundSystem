@@ -29,4 +29,10 @@ private:
 	 *  Starts deliberately wrong so the first update always sends one */
 	bool bWasSlipping = false;
 	bool bSentFirstUpdate = false;
+
+	/** Set when the choice of sound changed, fired on the following frame. A trigger and a float
+	 *  set in the same frame are not guaranteed to reach the graph in the order they were written,
+	 *  so telling it to re-pick in the same breath as changing what it should pick can have it
+	 *  re-pick from the old values and stay there */
+	bool bUpdatePending = false;
 };

@@ -180,3 +180,32 @@ static FAutoConsoleCommandWithWorld GVehicleSoundDumpState(
 			}
 		}
 	}));
+
+static FAutoConsoleCommandWithWorldAndArgs GVehicleSoundForceSlip(
+	TEXT("vs.ForceSlip"),
+	TEXT("vs.ForceSlip <0..1 | -1> - pins tyre slip on every vehicle, or -1 to hand it back to the wheels. Pin it to 1 to hear whether the tyre graph reacts to slip at all."),
+	FConsoleCommandWithWorldAndArgsDelegate::CreateStatic([](const TArray<FString>& Args, UWorld* World)
+	{
+		UVehicleSoundSubsystem* Subsystem = GetSubsystem(World);
+
+		if (Args.Num() < 1 || !Subsystem)
+		{
+			UE_LOG(LogVehicleSoundSystem, Warning, TEXT("Usage: vs.ForceSlip <0..1 | -1>"));
+			return;
+		}
+
+		const float Value = FCString::Atof(*Args[0]);
+		int32 Count = 0;
+
+		for (const TWeakObjectPtr<UVehicleSoundComponent>& Weak : Subsystem->GetActiveVehicles())
+		{
+			if (UVehicleSoundComponent* Component = Weak.Get())
+			{
+				Component->SlipOverride = Value;
+				++Count;
+			}
+		}
+
+		UE_LOG(LogVehicleSoundSystem, Display, TEXT("vs.ForceSlip: slip %s on %d vehicles."),
+			Value < 0.0f ? TEXT("released") : *FString::Printf(TEXT("pinned to %.2f"), Value), Count);
+	}));
