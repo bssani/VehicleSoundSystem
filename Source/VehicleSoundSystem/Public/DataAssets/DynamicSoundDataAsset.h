@@ -112,8 +112,20 @@ struct VEHICLESOUNDSYSTEM_API FTireSoundConfig
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tire", meta = (EditCondition = "MetaSoundSource == nullptr"))
 	TMap<ETireSurfaceType, TObjectPtr<USoundBase>> SurfaceSounds;
 
+	/** Rolling volume against road speed. Without one the fallback below is used */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tire")
 	TObjectPtr<UCurveFloat> SpeedToTireVolume;
+
+	/** Speed at which rolling noise reaches its full level, used when no curve is authored.
+	 *  Below it the tyres fade out, so a parked car is silent */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tire", meta = (Units = "km/h", ClampMin = "1.0"))
+	float SpeedAtFullRollingVolume = 60.0f;
+
+	/** How loud rolling gets relative to a full slide. Rolling is the sound that never stops, so
+	 *  it has to sit under the slide rather than next to it: at 1.0 the tyres are already as loud
+	 *  as they can get while simply driving, and sliding can no longer be heard over it */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tire", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float RollingVolumeScale = 0.35f;
 
 	/** Falloff for this layer. Different sounds carry different distances - an impact reaches
 	 *  much further than tyre roll - so each layer can override the asset-wide setting.

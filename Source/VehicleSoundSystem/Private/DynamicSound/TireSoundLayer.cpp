@@ -56,13 +56,23 @@ void UTireSoundLayer::Update(float DeltaTime, const FVehicleSoundState& State)
 	SetMetaSoundParameter(FName("Slip"), State.TireSlip);
 	SetMetaSoundParameter(FName("Skidding"), State.bTireSkidding ? 1.0f : 0.0f);
 
-	// rolling noise scales with speed, but sliding is what makes tyres loud. Taking the louder of
-	// the two means a stationary burnout is still heard, which the old speed-only path missed
-	float RollingVolume = 1.0f;
+	// Rolling noise scales with speed, sliding is what makes tyres loud, and the louder of the two
+	// wins so that a stationary burnout is still heard.
+	//
+	// Rolling used to fall back to 1.0 when no curve was authored, which is the case in every
+	// project that has not sat down and drawn one. That pinned the layer at full volume forever:
+	// the slide could never be louder than the rolling it was supposed to rise above, so tyre slip
+	// changed nothing at all and the tyres simply roared from the moment play began.
+	float RollingVolume;
 
 	if (Config.SpeedToTireVolume)
 	{
 		RollingVolume = Config.SpeedToTireVolume->GetFloatValue(State.Speed);
+	}
+	else
+	{
+		RollingVolume = FMath::Clamp(State.Speed / FMath::Max(Config.SpeedAtFullRollingVolume, 1.0f), 0.0f, 1.0f)
+			* Config.RollingVolumeScale;
 	}
 
 	AudioComponent->SetVolumeMultiplier(Volume * FMath::Max(RollingVolume, State.TireSlip));
