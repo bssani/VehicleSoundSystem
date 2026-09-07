@@ -1,17 +1,26 @@
 #include "Subsystem/VehicleSoundSubsystem.h"
 #include "Components/VehicleSoundComponent.h"
 #include "VehicleSoundSystemModule.h"
+#include "Settings/VehicleSoundSettings.h"
 
 void UVehicleSoundSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	MasterVolume = 1.0f;
-	CategoryVolumes.Add(EVehicleSoundCategory::Dynamic, 1.0f);
-	CategoryVolumes.Add(EVehicleSoundCategory::Interaction, 1.0f);
-	CategoryVolumes.Add(EVehicleSoundCategory::Infotainment, 1.0f);
+	const UVehicleSoundSettings* Settings = GetDefault<UVehicleSoundSettings>();
 
-	UE_LOG(LogVehicleSoundSystem, Log, TEXT("VehicleSoundSubsystem initialized."));
+	ReducedDistance = Settings->ReducedDistance;
+	EngineOnlyDistance = Settings->EngineOnlyDistance;
+	CullDistance = Settings->CullDistance;
+
+	MasterVolume = Settings->MasterVolume;
+	CategoryVolumes.Add(EVehicleSoundCategory::Dynamic, Settings->DynamicVolume);
+	CategoryVolumes.Add(EVehicleSoundCategory::Interaction, Settings->InteractionVolume);
+	CategoryVolumes.Add(EVehicleSoundCategory::Infotainment, Settings->InfotainmentVolume);
+
+	UE_LOG(LogVehicleSoundSystem, Log,
+		TEXT("VehicleSoundSubsystem initialized. LOD reduced/engine-only/cull: %.0f / %.0f / %.0f cm."),
+		ReducedDistance, EngineOnlyDistance, CullDistance);
 }
 
 void UVehicleSoundSubsystem::Deinitialize()

@@ -66,16 +66,21 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Vehicle Sound|LOD")
 	EVehicleSoundLOD GetLODForDistance(float Distance) const;
 
+	// The project's values for these live in Project Settings > Plugins > Vehicle Sound System and
+	// are copied in on Initialize. They stay writable so a Blueprint can move them for one session
+	// - a cutscene wanting to hear a car further out, say - without editing the project default.
+	// EditAnywhere is deliberately absent: a GameInstanceSubsystem has no editor to show it in.
+
 	/** Distance beyond which the quieter layers stop */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound|LOD", meta = (Units = "cm"))
+	UPROPERTY(BlueprintReadWrite, Category = "Vehicle Sound|LOD", meta = (Units = "cm"))
 	float ReducedDistance = 2500.0f;
 
 	/** Distance beyond which only the engine runs */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound|LOD", meta = (Units = "cm"))
+	UPROPERTY(BlueprintReadWrite, Category = "Vehicle Sound|LOD", meta = (Units = "cm"))
 	float EngineOnlyDistance = 6000.0f;
 
 	/** Distance beyond which a vehicle is silent */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound|LOD", meta = (Units = "cm"))
+	UPROPERTY(BlueprintReadWrite, Category = "Vehicle Sound|LOD", meta = (Units = "cm"))
 	float CullDistance = 15000.0f;
 
 private:

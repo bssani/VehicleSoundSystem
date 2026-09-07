@@ -16,7 +16,8 @@ public class VehicleSoundSystem : ModuleRules
 			"MetasoundFrontend",
 			"MetasoundGraphCore",
 			"ChaosVehicles",
-			"PhysicsCore"
+			"PhysicsCore",
+			"DeveloperSettings"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[]
