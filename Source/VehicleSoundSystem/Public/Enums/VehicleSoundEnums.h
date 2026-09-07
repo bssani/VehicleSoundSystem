@@ -117,6 +117,21 @@ struct VEHICLESOUNDSYSTEM_API FVehicleSoundState
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound", meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float WindowOpenAmount = 0.0f;
 
+	/** Fraction of wheels still carrying an intact tyre, 1 when the car is on four good ones.
+	 *  A tyre graph has to be told this: left unset it reads as a car running on bare rims and
+	 *  plays the grinding that goes with it, for the whole session */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float TireIntactFraction = 1.0f;
+
+	/** Fraction of wheels running flat. Chaos does not model tyre damage, so this stays 0 unless
+	 *  the game drives it */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float TireFlatFraction = 0.0f;
+
+	/** Fraction of wheels with no tyre left at all */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float TireMissingFraction = 0.0f;
+
 	/** True while the listener is sitting in this vehicle. A cabin and a trackside position hear
 	 *  very different cars, and a source built for both needs telling which one it is playing to */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound")

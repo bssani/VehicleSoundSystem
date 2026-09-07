@@ -74,6 +74,10 @@ protected:
 	/** Helper to set a bool parameter on the AudioComponent (MetaSound input) */
 	void SetMetaSoundBoolParameter(FName ParameterName, bool bValue);
 
+	/** Fires a trigger input on the graph. Graphs that switch between sounds usually want telling
+	 *  when the choice has changed rather than watching for it themselves */
+	void SetMetaSoundTrigger(FName ParameterName);
+
 	/** Sets playback pitch directly on the AudioComponent.
 	 *  A MetaSound graph does its own pitch work, but a layer pointed at a plain SoundWave has
 	 *  no graph to do it, and without this the sound never changes with the vehicle. Driving it

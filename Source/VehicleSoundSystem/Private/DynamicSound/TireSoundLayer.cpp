@@ -56,6 +56,25 @@ void UTireSoundLayer::Update(float DeltaTime, const FVehicleSoundState& State)
 	SetMetaSoundParameter(FName("Slip"), State.TireSlip);
 	SetMetaSoundParameter(FName("Skidding"), State.bTireSkidding ? 1.0f : 0.0f);
 
+	// A tyre graph usually carries more than one sound: rolling, sliding, running flat, running on
+	// the bare rim. It picks between them from the condition of the tyres, and left unset that
+	// condition reads as a car with no tyres on it at all - so a perfectly healthy car grinds
+	// along on its rims for the whole session, which is easy to mistake for a stuck slip sound.
+	SetMetaSoundParameter(FName("AnyWheelHasTire"), State.TireIntactFraction);
+	SetMetaSoundParameter(FName("FlatTire"), State.TireFlatFraction);
+	SetMetaSoundParameter(FName("NoTire"), State.TireMissingFraction);
+
+	// and it wants telling when the choice has changed rather than watching for it itself
+	const bool bSlipping = State.TireSlip > KINDA_SMALL_NUMBER;
+
+	if (!bSentFirstUpdate || bSlipping != bWasSlipping || State.TireSurface != LastSurface)
+	{
+		SetMetaSoundTrigger(FName("UpdateSound"));
+		bSentFirstUpdate = true;
+		bWasSlipping = bSlipping;
+		LastSurface = State.TireSurface;
+	}
+
 	// Rolling noise scales with speed, sliding is what makes tyres loud, and the louder of the two
 	// wins so that a stationary burnout is still heard.
 	//

@@ -199,3 +199,11 @@ void UDynamicSoundLayer::SetMetaSoundBoolParameter(FName ParameterName, bool bVa
 		AudioComponent->SetBoolParameter(ResolveParameterName(ParameterName), bValue);
 	}
 }
+
+void UDynamicSoundLayer::SetMetaSoundTrigger(FName ParameterName)
+{
+	if (AudioComponent)
+	{
+		AudioComponent->SetTriggerParameter(ResolveParameterName(ParameterName));
+	}
+}

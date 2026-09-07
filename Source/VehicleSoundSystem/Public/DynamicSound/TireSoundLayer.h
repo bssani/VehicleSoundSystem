@@ -24,4 +24,9 @@ private:
 
 	/** Surface the current sample was chosen for, so it only swaps when the ground changes */
 	ETireSurfaceType LastSurface = ETireSurfaceType::Asphalt;
+
+	/** What the graph was last told to play, so it is only told again when the answer changes.
+	 *  Starts deliberately wrong so the first update always sends one */
+	bool bWasSlipping = false;
+	bool bSentFirstUpdate = false;
 };
