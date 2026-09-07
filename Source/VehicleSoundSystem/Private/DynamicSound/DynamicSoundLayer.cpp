@@ -191,3 +191,11 @@ void UDynamicSoundLayer::SetMetaSoundIntParameter(FName ParameterName, int32 Val
 		AudioComponent->SetIntParameter(ResolveParameterName(ParameterName), Value);
 	}
 }
+
+void UDynamicSoundLayer::SetMetaSoundBoolParameter(FName ParameterName, bool bValue)
+{
+	if (AudioComponent)
+	{
+		AudioComponent->SetBoolParameter(ResolveParameterName(ParameterName), bValue);
+	}
+}

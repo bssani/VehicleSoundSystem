@@ -54,6 +54,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound|Config")
 	TMap<TEnumAsByte<EPhysicalSurface>, ETireSurfaceType> SurfaceTypeMapping;
 
+	/** How close the listener has to be to count as sitting in this car. Measured to the camera,
+	 *  so a cockpit view is inside and a chase camera is not, which is what a listener actually
+	 *  hears. Wide enough to cover a head leaning around a cabin, short enough that the car in
+	 *  front is never mistaken for your own */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound|Config", meta = (Units = "cm", ClampMin = "0.0"))
+	float InteriorListenerRadius = 250.0f;
+
 	/** Chaos slip magnitude treated as fully sliding, used to normalise TireSlip to 0-1.
 	 *  Raise it if tyres squeal too readily, lower it if they stay quiet through a slide */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound|Config", meta = (ClampMin = "1.0"))
@@ -155,7 +162,9 @@ private:
 	/** LOD applied last frame, so layers are only toggled when the tier actually changes */
 	EVehicleSoundLOD CurrentLOD = EVehicleSoundLOD::Full;
 
-	UPROPERTY()
+	/** What the layers are being driven with this frame. Read-only and visible while playing, so a
+	 *  sound that is behaving oddly can be checked against the numbers feeding it */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Vehicle Sound|State", meta = (AllowPrivateAccess = "true"))
 	FVehicleSoundState CurrentState;
 
 	UPROPERTY()

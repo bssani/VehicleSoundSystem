@@ -38,6 +38,12 @@ void UEngineSoundLayer::Update(float DeltaTime, const FVehicleSoundState& State)
 	SetMetaSoundParameter(FName("Throttle"), State.ThrottleInput);
 	SetMetaSoundParameter(FName("Redline"), State.RPM >= Config.RedlineRPM ? 1.0f : 0.0f);
 
+	// a graph that carries both a cabin and an exterior mix has no way to pick between them on its
+	// own. Left unset it stays on whichever its author defaulted to, which is how a driver ends up
+	// listening to their own car from the outside
+	SetMetaSoundBoolParameter(FName("InCar"), State.bListenerInside);
+	SetMetaSoundBoolParameter(FName("Reverse"), State.CurrentGear < 0);
+
 	if (Config.RPMToVolumeCurve)
 	{
 		const float CurveVolume = Config.RPMToVolumeCurve->GetFloatValue(State.RPM);

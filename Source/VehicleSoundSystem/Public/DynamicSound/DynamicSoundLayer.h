@@ -68,6 +68,9 @@ protected:
 	/** Helper to set an int parameter on the AudioComponent (MetaSound input) */
 	void SetMetaSoundIntParameter(FName ParameterName, int32 Value);
 
+	/** Helper to set a bool parameter on the AudioComponent (MetaSound input) */
+	void SetMetaSoundBoolParameter(FName ParameterName, bool bValue);
+
 	/** Sets playback pitch directly on the AudioComponent.
 	 *  A MetaSound graph does its own pitch work, but a layer pointed at a plain SoundWave has
 	 *  no graph to do it, and without this the sound never changes with the vehicle. Driving it

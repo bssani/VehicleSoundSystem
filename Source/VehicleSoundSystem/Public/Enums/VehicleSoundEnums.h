@@ -116,4 +116,9 @@ struct VEHICLESOUNDSYSTEM_API FVehicleSoundState
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound", meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float WindowOpenAmount = 0.0f;
+
+	/** True while the listener is sitting in this vehicle. A cabin and a trackside position hear
+	 *  very different cars, and a source built for both needs telling which one it is playing to */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound")
+	bool bListenerInside = false;
 };

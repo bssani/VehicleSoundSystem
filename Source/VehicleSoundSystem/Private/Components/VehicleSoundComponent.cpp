@@ -139,6 +139,10 @@ void UVehicleSoundComponent::UpdateLOD()
 	}
 
 	const float Distance = FVector::Dist(PC->PlayerCameraManager->GetCameraLocation(), Owner->GetActorLocation());
+
+	// the same measurement answers which mix to play, so it is taken here rather than repeated
+	CurrentState.bListenerInside = Distance <= InteriorListenerRadius;
+
 	const EVehicleSoundLOD NewLOD = Subsystem->GetLODForDistance(Distance);
 
 	if (NewLOD == CurrentLOD)
