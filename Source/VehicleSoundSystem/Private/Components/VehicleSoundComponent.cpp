@@ -360,6 +360,9 @@ void UVehicleSoundComponent::UpdateDynamicLayers(float DeltaTime)
 	{
 		if (Layer && Layer->IsActive())
 		{
+			// a source that ended by itself leaves the layer active but silent, and nothing else
+			// in the update path notices
+			Layer->RestartIfStopped();
 			Layer->Update(DeltaTime, CurrentState);
 		}
 	}

@@ -29,6 +29,28 @@ void UDynamicSoundLayer::Deactivate()
 	}
 }
 
+void UDynamicSoundLayer::RestartIfStopped()
+{
+	if (!bIsActive || !AudioComponent || AudioComponent->IsPlaying())
+	{
+		return;
+	}
+
+	if (!bReportedSourceEnded)
+	{
+		bReportedSourceEnded = true;
+
+		UE_LOG(LogVehicleSoundSystem, Warning,
+			TEXT("DynamicSoundLayer: '%s' ended on its own, leaving layer type %d silent. Restarting it. ")
+			TEXT("A continuous layer wants a source that runs until stopped; a MetaSound carrying the ")
+			TEXT("UE.Source.OneShot interface ends when its graph triggers On Finished."),
+			AudioComponent->Sound ? *AudioComponent->Sound->GetName() : TEXT("(none)"),
+			static_cast<int32>(GetLayerType()));
+	}
+
+	AudioComponent->Play();
+}
+
 void UDynamicSoundLayer::SetVolume(float InVolume)
 {
 	Volume = FMath::Clamp(InVolume, 0.0f, 1.0f);

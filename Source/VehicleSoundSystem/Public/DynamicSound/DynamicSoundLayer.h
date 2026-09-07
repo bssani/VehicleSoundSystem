@@ -41,6 +41,14 @@ public:
 	/** Whether this layer is currently active */
 	bool IsActive() const { return bIsActive; }
 
+	/** Restarts the source if it stopped by itself. A layer is meant to run for as long as the
+	 *  vehicle does, but a source can end on its own - a MetaSound carrying the one-shot interface
+	 *  ends whenever its graph says so - and nothing tells the layer. The layer is then marked
+	 *  active while silent, which is the one state neither Activate nor the distance LOD can undo:
+	 *  both skip a layer that already reports itself active. Without this, one such ending silences
+	 *  that layer for the rest of the session */
+	void RestartIfStopped();
+
 	/** Get the layer type */
 	virtual EDynamicSoundLayerType GetLayerType() const PURE_VIRTUAL(UDynamicSoundLayer::GetLayerType, return EDynamicSoundLayerType::Engine;);
 
@@ -85,4 +93,7 @@ protected:
 
 	float Volume = 1.0f;
 	bool bIsActive = false;
+
+	/** So a source that keeps ending reports itself once rather than every time it restarts */
+	bool bReportedSourceEnded = false;
 };
