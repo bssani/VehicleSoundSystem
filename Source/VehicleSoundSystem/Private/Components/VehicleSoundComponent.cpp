@@ -500,11 +500,16 @@ void UVehicleSoundComponent::LogSoundState() const
 {
 	const AActor* Owner = GetOwner();
 
+	// the override has to be visible here: pinned slip looks exactly like slip that will not tune,
+	// and a session that forgot to release it will chase the threshold for ever
 	UE_LOG(LogVehicleSoundSystem, Display,
-		TEXT("%s  %.0f km/h  %.0f rpm  slip %.2f  skidding %d  inside %d  gear %d"),
+		TEXT("%s  %.0f km/h  %.0f rpm  slip %.2f  sliding %d  gear %d  inside %d  ")
+		TEXT("[threshold %.0f  release %.0f  reference %.0f%s]"),
 		Owner ? *Owner->GetName() : TEXT("?"), CurrentState.Speed, CurrentState.RPM,
-		CurrentState.TireSlip, CurrentState.bTireSkidding ? 1 : 0,
-		CurrentState.bListenerInside ? 1 : 0, CurrentState.CurrentGear);
+		CurrentState.TireSlip, CurrentState.bTireSliding ? 1 : 0, CurrentState.CurrentGear,
+		CurrentState.bListenerInside ? 1 : 0,
+		TireSlipThreshold, TireSlipThreshold * TireSlipReleaseRatio, TireSlipReference,
+		SlipOverride >= 0.0f ? *FString::Printf(TEXT("  OVERRIDE PINNED AT %.2f"), SlipOverride) : TEXT(""));
 
 	for (const UDynamicSoundLayer* Layer : DynamicLayers)
 	{

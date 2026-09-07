@@ -209,3 +209,39 @@ static FAutoConsoleCommandWithWorldAndArgs GVehicleSoundForceSlip(
 		UE_LOG(LogVehicleSoundSystem, Display, TEXT("vs.ForceSlip: slip %s on %d vehicles."),
 			Value < 0.0f ? TEXT("released") : *FString::Printf(TEXT("pinned to %.2f"), Value), Count);
 	}));
+
+static FAutoConsoleCommandWithWorldAndArgs GVehicleSoundSlipThreshold(
+	TEXT("vs.SlipThreshold"),
+	TEXT("vs.SlipThreshold <slip> [reference] - how much wheel slip counts as sliding, on every vehicle. Tuning this in the Blueprint needs a restart to take; this takes immediately."),
+	FConsoleCommandWithWorldAndArgsDelegate::CreateStatic([](const TArray<FString>& Args, UWorld* World)
+	{
+		UVehicleSoundSubsystem* Subsystem = GetSubsystem(World);
+
+		if (Args.Num() < 1 || !Subsystem)
+		{
+			UE_LOG(LogVehicleSoundSystem, Warning, TEXT("Usage: vs.SlipThreshold <slip> [reference]"));
+			return;
+		}
+
+		const float Threshold = FMath::Max(FCString::Atof(*Args[0]), 0.0f);
+		const float Reference = Args.Num() > 1 ? FCString::Atof(*Args[1]) : -1.0f;
+		int32 Count = 0;
+
+		for (const TWeakObjectPtr<UVehicleSoundComponent>& Weak : Subsystem->GetActiveVehicles())
+		{
+			if (UVehicleSoundComponent* Component = Weak.Get())
+			{
+				Component->TireSlipThreshold = Threshold;
+
+				if (Reference > 0.0f)
+				{
+					Component->TireSlipReference = Reference;
+				}
+
+				++Count;
+			}
+		}
+
+		UE_LOG(LogVehicleSoundSystem, Display, TEXT("vs.SlipThreshold: threshold %.0f%s on %d vehicles."),
+			Threshold, Reference > 0.0f ? *FString::Printf(TEXT(", reference %.0f"), Reference) : TEXT(""), Count);
+	}));
