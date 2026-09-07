@@ -61,10 +61,13 @@ void UTireSoundLayer::Update(float DeltaTime, const FVehicleSoundState& State)
 	SetMetaSoundParameter(FName("Skidding"), State.bTireSkidding ? 1.0f : 0.0f);
 
 	// A tyre graph usually carries more than one sound: rolling, sliding, running flat, running on
-	// the bare rim. It picks between them from the condition of the tyres, and left unset that
-	// condition reads as a car with no tyres on it at all - so a perfectly healthy car grinds
-	// along on its rims for the whole session, which is easy to mistake for a stuck slip sound.
-	SetMetaSoundParameter(FName("AnyWheelHasTire"), State.TireIntactFraction);
+	// the bare rim, and picks between them from the condition of the tyres.
+	//
+	// Read MS_WheelSounds before trusting the name of the first one. Its slip branch is gained by
+	// (1 - AnyWheelHasTire), so a 1 there multiplies the slip sound to silence; the value marks
+	// wheels running WITHOUT a tyre, not with one. Sending 1 for a healthy car removes the slip
+	// sound entirely while leaving rolling untouched, since rolling is gated on OnSlip alone.
+	SetMetaSoundParameter(FName("AnyWheelHasTire"), 1.0f - State.TireIntactFraction);
 	SetMetaSoundParameter(FName("FlatTire"), State.TireFlatFraction);
 	SetMetaSoundParameter(FName("NoTire"), State.TireMissingFraction);
 
