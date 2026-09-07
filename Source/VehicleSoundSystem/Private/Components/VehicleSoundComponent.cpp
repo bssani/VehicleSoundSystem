@@ -333,7 +333,11 @@ void UVehicleSoundComponent::GatherStateFromChaosVehicle()
 			continue;
 		}
 
-		const float WheelSlip = FMath::Max(Wheel.SlipMagnitude, Wheel.SkidMagnitude);
+		// both magnitudes are signed: a wheel dragging under braking reports the negative of one
+		// spinning up under power. Taking the larger of the raw values kept only wheelspin and
+		// threw every braking and cornering slide away, so the tyres were silent exactly when they
+		// should have been loudest. A slide is a slide whichever way the wheel is going wrong
+		const float WheelSlip = FMath::Max(FMath::Abs(Wheel.SlipMagnitude), FMath::Abs(Wheel.SkidMagnitude));
 
 		WorstSlip = FMath::Max(WorstSlip, WheelSlip);
 		bAnySkidding |= Wheel.bIsSkidding;
@@ -354,7 +358,10 @@ void UVehicleSoundComponent::GatherStateFromChaosVehicle()
 
 	CurrentState.TireSurface = DetectedSurface;
 
-	CurrentState.TireSlip = FMath::Clamp(WorstSlip / FMath::Max(TireSlipReference, 1.0f), 0.0f, 1.0f);
+	// measured from the threshold rather than from zero, so ordinary cornering stays silent and
+	// the range that is audible is spent on actual sliding
+	const float SlipRange = FMath::Max(TireSlipReference - TireSlipThreshold, 1.0f);
+	CurrentState.TireSlip = FMath::Clamp((WorstSlip - TireSlipThreshold) / SlipRange, 0.0f, 1.0f);
 	CurrentState.bTireSkidding = bAnySkidding;
 }
 
