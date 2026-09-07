@@ -2,6 +2,10 @@
 #include "Components/VehicleSoundComponent.h"
 #include "VehicleSoundSystemModule.h"
 #include "Settings/VehicleSoundSettings.h"
+#include "Engine/World.h"
+#include "Engine/GameInstance.h"
+#include "Components/AudioComponent.h"
+#include "DynamicSound/DynamicSoundLayer.h"
 
 void UVehicleSoundSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -82,3 +86,97 @@ float UVehicleSoundSubsystem::GetCategoryVolume(EVehicleSoundCategory Category) 
 	const float* Found = CategoryVolumes.Find(Category);
 	return Found ? *Found : 1.0f;
 }
+
+// --- Console commands ---
+//
+// Working out which layer is responsible for a noise is otherwise guesswork: every layer plays
+// into the same mix on the same actor, and a tyre graph and an engine graph can sound alike. These
+// silence one layer at a time across every vehicle, which answers it in one go.
+
+namespace
+{
+	bool ParseLayerType(const FString& Name, EDynamicSoundLayerType& OutType)
+	{
+		static const TMap<FString, EDynamicSoundLayerType> Names =
+		{
+			{ TEXT("engine"),       EDynamicSoundLayerType::Engine },
+			{ TEXT("evmotor"),      EDynamicSoundLayerType::EVMotor },
+			{ TEXT("exhaust"),      EDynamicSoundLayerType::Exhaust },
+			{ TEXT("tire"),         EDynamicSoundLayerType::Tire },
+			{ TEXT("wind"),         EDynamicSoundLayerType::Wind },
+			{ TEXT("transmission"), EDynamicSoundLayerType::Transmission }
+		};
+
+		if (const EDynamicSoundLayerType* Found = Names.Find(Name.ToLower()))
+		{
+			OutType = *Found;
+			return true;
+		}
+
+		return false;
+	}
+
+	UVehicleSoundSubsystem* GetSubsystem(const UWorld* World)
+	{
+		return (World && World->GetGameInstance())
+			? World->GetGameInstance()->GetSubsystem<UVehicleSoundSubsystem>()
+			: nullptr;
+	}
+}
+
+static FAutoConsoleCommandWithWorldAndArgs GVehicleSoundLayerVolume(
+	TEXT("vs.LayerVolume"),
+	TEXT("vs.LayerVolume <engine|evmotor|exhaust|tire|wind|transmission> <0..1> - sets that layer's volume on every vehicle. Silence one at a time to find which is making a noise."),
+	FConsoleCommandWithWorldAndArgsDelegate::CreateStatic([](const TArray<FString>& Args, UWorld* World)
+	{
+		EDynamicSoundLayerType LayerType;
+
+		if (Args.Num() < 2 || !ParseLayerType(Args[0], LayerType))
+		{
+			UE_LOG(LogVehicleSoundSystem, Warning, TEXT("Usage: vs.LayerVolume <engine|evmotor|exhaust|tire|wind|transmission> <0..1>"));
+			return;
+		}
+
+		UVehicleSoundSubsystem* Subsystem = GetSubsystem(World);
+
+		if (!Subsystem)
+		{
+			return;
+		}
+
+		const float Volume = FMath::Clamp(FCString::Atof(*Args[1]), 0.0f, 1.0f);
+		int32 Count = 0;
+
+		for (const TWeakObjectPtr<UVehicleSoundComponent>& Weak : Subsystem->GetActiveVehicles())
+		{
+			if (UVehicleSoundComponent* Component = Weak.Get())
+			{
+				Component->SetLayerVolume(LayerType, Volume);
+				++Count;
+			}
+		}
+
+		UE_LOG(LogVehicleSoundSystem, Display, TEXT("vs.LayerVolume: layer %s set to %.2f on %d vehicles."),
+			*Args[0], Volume, Count);
+	}));
+
+static FAutoConsoleCommandWithWorld GVehicleSoundDumpState(
+	TEXT("vs.DumpState"),
+	TEXT("Writes every vehicle's speed, revs, slip and per-layer volumes to the log."),
+	FConsoleCommandWithWorldDelegate::CreateStatic([](UWorld* World)
+	{
+		UVehicleSoundSubsystem* Subsystem = GetSubsystem(World);
+
+		if (!Subsystem)
+		{
+			return;
+		}
+
+		for (const TWeakObjectPtr<UVehicleSoundComponent>& Weak : Subsystem->GetActiveVehicles())
+		{
+			if (const UVehicleSoundComponent* Component = Weak.Get())
+			{
+				Component->LogSoundState();
+			}
+		}
+	}));

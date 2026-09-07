@@ -145,6 +145,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Vehicle Sound|Volume")
 	void SetCategoryVolume(EVehicleSoundCategory Category, float InVolume);
 
+	/** Sets the volume of one layer type. Silencing a single layer is how you find out which one
+	 *  is making a noise; the console commands below drive this across every vehicle at once */
+	UFUNCTION(BlueprintCallable, Category = "Vehicle Sound|Global")
+	void SetLayerVolume(EDynamicSoundLayerType LayerType, float InVolume);
+
+	/** Writes what each layer is playing and how loudly to the log */
+	UFUNCTION(BlueprintCallable, Category = "Vehicle Sound|State")
+	void LogSoundState() const;
+
 	// --- State Access ---
 
 	UFUNCTION(BlueprintPure, Category = "Vehicle Sound|State")

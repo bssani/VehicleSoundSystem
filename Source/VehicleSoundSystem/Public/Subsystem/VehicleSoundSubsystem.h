@@ -61,6 +61,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Vehicle Sound|Global")
 	int32 GetActiveVehicleCount() const { return ActiveVehicles.Num(); }
 
+	/** Every vehicle currently registered. Entries can be stale, so check before use */
+	const TArray<TWeakObjectPtr<UVehicleSoundComponent>>& GetActiveVehicles() const { return ActiveVehicles; }
+
 	/** Returns how much of a vehicle's sound to run at the given distance from the listener.
 	 *  A grid of AI cars is otherwise N vehicles times six layers of always-on audio */
 	UFUNCTION(BlueprintPure, Category = "Vehicle Sound|LOD")

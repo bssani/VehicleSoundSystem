@@ -473,6 +473,47 @@ void UVehicleSoundComponent::PlayNotification()
 
 // --- Volume ---
 
+void UVehicleSoundComponent::SetLayerVolume(EDynamicSoundLayerType LayerType, float InVolume)
+{
+	for (UDynamicSoundLayer* Layer : DynamicLayers)
+	{
+		if (Layer && Layer->GetLayerType() == LayerType)
+		{
+			Layer->SetVolume(InVolume);
+		}
+	}
+}
+
+void UVehicleSoundComponent::LogSoundState() const
+{
+	const AActor* Owner = GetOwner();
+
+	UE_LOG(LogVehicleSoundSystem, Display,
+		TEXT("%s  %.0f km/h  %.0f rpm  slip %.2f  skidding %d  inside %d  gear %d"),
+		Owner ? *Owner->GetName() : TEXT("?"), CurrentState.Speed, CurrentState.RPM,
+		CurrentState.TireSlip, CurrentState.bTireSkidding ? 1 : 0,
+		CurrentState.bListenerInside ? 1 : 0, CurrentState.CurrentGear);
+
+	for (const UDynamicSoundLayer* Layer : DynamicLayers)
+	{
+		if (!Layer)
+		{
+			continue;
+		}
+
+		const UAudioComponent* Audio = Layer->GetAudioComponent();
+
+		// the layer's own volume is only the ceiling; what reaches the mix is what the layer
+		// worked out this frame from speed, revs and slip, and that is the number worth seeing
+		UE_LOG(LogVehicleSoundSystem, Display,
+			TEXT("    %-13s active %d  playing %d  layerVol %.2f  heard %.2f  sound %s"),
+			*UEnum::GetDisplayValueAsText(Layer->GetLayerType()).ToString(),
+			Layer->IsActive() ? 1 : 0, (Audio && Audio->IsPlaying()) ? 1 : 0,
+			Layer->GetVolume(), Audio ? Audio->VolumeMultiplier : 0.0f,
+			(Audio && Audio->Sound) ? *Audio->Sound->GetName() : TEXT("(none)"));
+	}
+}
+
 void UVehicleSoundComponent::SetCategoryVolume(EVehicleSoundCategory Category, float InVolume)
 {
 	float ClampedVolume = FMath::Clamp(InVolume, 0.0f, 1.0f);

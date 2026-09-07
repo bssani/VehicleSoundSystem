@@ -41,6 +41,9 @@ public:
 	/** Whether this layer is currently active */
 	bool IsActive() const { return bIsActive; }
 
+	/** The component doing the playing, for callers that need to ask what it is actually doing */
+	const UAudioComponent* GetAudioComponent() const { return AudioComponent; }
+
 	/** Restarts the source if it stopped by itself. A layer is meant to run for as long as the
 	 *  vehicle does, but a source can end on its own - a MetaSound carrying the one-shot interface
 	 *  ends whenever its graph says so - and nothing tells the layer. The layer is then marked
