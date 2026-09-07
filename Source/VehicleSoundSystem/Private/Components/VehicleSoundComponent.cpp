@@ -362,6 +362,12 @@ void UVehicleSoundComponent::GatherStateFromChaosVehicle()
 	// the range that is audible is spent on actual sliding
 	const float SlipRange = FMath::Max(TireSlipReference - TireSlipThreshold, 1.0f);
 	CurrentState.TireSlip = FMath::Clamp((WorstSlip - TireSlipThreshold) / SlipRange, 0.0f, 1.0f);
+
+	// takes more slip to start sliding than to keep sliding, so a car held on the limit settles on
+	// an answer instead of alternating
+	CurrentState.bTireSliding = CurrentState.bTireSliding
+		? WorstSlip > TireSlipThreshold * TireSlipReleaseRatio
+		: WorstSlip > TireSlipThreshold;
 	CurrentState.bTireSkidding = bAnySkidding;
 }
 

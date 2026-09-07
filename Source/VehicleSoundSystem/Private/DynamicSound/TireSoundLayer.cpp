@@ -51,9 +51,13 @@ void UTireSoundLayer::Update(float DeltaTime, const FVehicleSoundState& State)
 		LastSurface = State.TireSurface;
 	}
 
+	// the component has already decided this, with hysteresis, so the answer does not flicker.
+	// Volume still follows the slip amount further down; this only picks which sound plays.
+	const bool bSlipping = State.bTireSliding;
+
 	SetMetaSoundParameter(FName("Speed"), State.Speed);
 	SetMetaSoundIntParameter(FName("SurfaceType"), static_cast<int32>(State.TireSurface));
-	SetMetaSoundParameter(FName("Slip"), State.TireSlip);
+	SetMetaSoundParameter(FName("Slip"), Config.bSlipParameterIsSwitch ? (bSlipping ? 1.0f : 0.0f) : State.TireSlip);
 	SetMetaSoundParameter(FName("Skidding"), State.bTireSkidding ? 1.0f : 0.0f);
 
 	// A tyre graph usually carries more than one sound: rolling, sliding, running flat, running on
@@ -65,8 +69,6 @@ void UTireSoundLayer::Update(float DeltaTime, const FVehicleSoundState& State)
 	SetMetaSoundParameter(FName("NoTire"), State.TireMissingFraction);
 
 	// and it wants telling when the choice has changed rather than watching for it itself
-	const bool bSlipping = State.TireSlip > KINDA_SMALL_NUMBER;
-
 	if (!bSentFirstUpdate || bSlipping != bWasSlipping || State.TireSurface != LastSurface)
 	{
 		SetMetaSoundTrigger(FName("UpdateSound"));

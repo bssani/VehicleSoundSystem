@@ -111,6 +111,12 @@ struct VEHICLESOUNDSYSTEM_API FVehicleSoundState
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound")
 	bool bTireSkidding = false;
 
+	/** Whether the tyres count as sliding, decided once with hysteresis so a car held right at the
+	 *  threshold does not flicker between rolling and sliding. Layers that switch sounds use this;
+	 *  TireSlip says how hard the slide is */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound")
+	bool bTireSliding = false;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound")
 	EVehiclePowertrainType PowertrainType = EVehiclePowertrainType::ICE;
 

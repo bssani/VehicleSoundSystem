@@ -67,6 +67,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound|Config", meta = (ClampMin = "0.0"))
 	float TireSlipThreshold = 60.0f;
 
+	/** How far slip has to fall back below the threshold before the tyres count as gripping again,
+	 *  as a fraction of it. Without this gap a car balanced on the limit flickers between rolling
+	 *  and sliding, and a layer that swaps sounds on that switch swaps them every few frames */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound|Config", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float TireSlipReleaseRatio = 0.7f;
+
 	/** Slip treated as a full slide, where tyre noise is at its loudest. Together with the
 	 *  threshold this maps Chaos slip onto 0-1: raise it if tyres squeal too readily, lower it if
 	 *  they stay quiet through a slide */

@@ -112,6 +112,17 @@ struct VEHICLESOUNDSYSTEM_API FTireSoundConfig
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tire", meta = (EditCondition = "MetaSoundSource == nullptr"))
 	TMap<ETireSurfaceType, TObjectPtr<USoundBase>> SurfaceSounds;
 
+	/** Whether the graph switches between a rolling and a sliding sound rather than blending them.
+	 *
+	 *  A switching graph wants a clean 1 or 0: handed 0.15 it sits in neither state and the slide
+	 *  is never heard. A blending graph wants the amount. MS_WheelSounds switches - its slip input
+	 *  sits alongside flags for flat and missing tyres, and it carries an UpdateSound trigger,
+	 *  which a graph only needs if it is swapping sounds rather than mixing them.
+	 *
+	 *  Turn this off for a graph that crossfades on the slip amount. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tire")
+	bool bSlipParameterIsSwitch = true;
+
 	/** Rolling volume against road speed. Without one the fallback below is used */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tire")
 	TObjectPtr<UCurveFloat> SpeedToTireVolume;
