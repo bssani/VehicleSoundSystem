@@ -212,14 +212,14 @@ static FAutoConsoleCommandWithWorldAndArgs GVehicleSoundForceSlip(
 
 static FAutoConsoleCommandWithWorldAndArgs GVehicleSoundSlipThreshold(
 	TEXT("vs.SlipThreshold"),
-	TEXT("vs.SlipThreshold <slip> [reference] - how much wheel slip counts as sliding, on every vehicle. Tuning this in the Blueprint needs a restart to take; this takes immediately."),
+	TEXT("vs.SlipThreshold <fraction> [reference] - slip as a fraction of road speed that counts as sliding, on every vehicle. Ordinary cornering measures about 0.03, a real slide about 0.27. Takes effect immediately, unlike editing the Blueprint."),
 	FConsoleCommandWithWorldAndArgsDelegate::CreateStatic([](const TArray<FString>& Args, UWorld* World)
 	{
 		UVehicleSoundSubsystem* Subsystem = GetSubsystem(World);
 
 		if (Args.Num() < 1 || !Subsystem)
 		{
-			UE_LOG(LogVehicleSoundSystem, Warning, TEXT("Usage: vs.SlipThreshold <slip> [reference]"));
+			UE_LOG(LogVehicleSoundSystem, Warning, TEXT("Usage: vs.SlipThreshold <fraction> [reference]  (cornering ~0.03, sliding ~0.27)"));
 			return;
 		}
 
@@ -242,6 +242,6 @@ static FAutoConsoleCommandWithWorldAndArgs GVehicleSoundSlipThreshold(
 			}
 		}
 
-		UE_LOG(LogVehicleSoundSystem, Display, TEXT("vs.SlipThreshold: threshold %.0f%s on %d vehicles."),
-			Threshold, Reference > 0.0f ? *FString::Printf(TEXT(", reference %.0f"), Reference) : TEXT(""), Count);
+		UE_LOG(LogVehicleSoundSystem, Display, TEXT("vs.SlipThreshold: threshold %.3f%s on %d vehicles."),
+			Threshold, Reference > 0.0f ? *FString::Printf(TEXT(", reference %.3f"), Reference) : TEXT(""), Count);
 	}));

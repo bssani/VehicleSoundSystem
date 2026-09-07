@@ -358,16 +358,23 @@ void UVehicleSoundComponent::GatherStateFromChaosVehicle()
 
 	CurrentState.TireSurface = DetectedSurface;
 
+	// As a fraction of how fast the car is actually going. What makes a tyre sing is how far its
+	// contact patch is from where the wheel is pointed, relative to the journey - not the raw
+	// sliding speed, which grows with the car and puts any fixed figure permanently wrong at every
+	// other speed.
+	const float SlipReferenceSpeed = FMath::Max(FMath::Abs(CachedChaosVehicle->GetForwardSpeed()), TireSlipMinSpeed);
+	const float SlipFraction = WorstSlip / SlipReferenceSpeed;
+
 	// measured from the threshold rather than from zero, so ordinary cornering stays silent and
 	// the range that is audible is spent on actual sliding
-	const float SlipRange = FMath::Max(TireSlipReference - TireSlipThreshold, 1.0f);
-	CurrentState.TireSlip = FMath::Clamp((WorstSlip - TireSlipThreshold) / SlipRange, 0.0f, 1.0f);
+	const float SlipRange = FMath::Max(TireSlipReference - TireSlipThreshold, KINDA_SMALL_NUMBER);
+	CurrentState.TireSlip = FMath::Clamp((SlipFraction - TireSlipThreshold) / SlipRange, 0.0f, 1.0f);
 
 	// takes more slip to start sliding than to keep sliding, so a car held on the limit settles on
 	// an answer instead of alternating
 	CurrentState.bTireSliding = CurrentState.bTireSliding
-		? WorstSlip > TireSlipThreshold * TireSlipReleaseRatio
-		: WorstSlip > TireSlipThreshold;
+		? SlipFraction > TireSlipThreshold * TireSlipReleaseRatio
+		: SlipFraction > TireSlipThreshold;
 
 	if (SlipOverride >= 0.0f)
 	{
@@ -504,7 +511,7 @@ void UVehicleSoundComponent::LogSoundState() const
 	// and a session that forgot to release it will chase the threshold for ever
 	UE_LOG(LogVehicleSoundSystem, Display,
 		TEXT("%s  %.0f km/h  %.0f rpm  slip %.2f  sliding %d  gear %d  inside %d  ")
-		TEXT("[threshold %.0f  release %.0f  reference %.0f%s]"),
+		TEXT("[threshold %.3f  release %.3f  reference %.3f%s]"),
 		Owner ? *Owner->GetName() : TEXT("?"), CurrentState.Speed, CurrentState.RPM,
 		CurrentState.TireSlip, CurrentState.bTireSliding ? 1 : 0, CurrentState.CurrentGear,
 		CurrentState.bListenerInside ? 1 : 0,

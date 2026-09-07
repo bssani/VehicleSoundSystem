@@ -61,11 +61,21 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound|Config", meta = (Units = "cm", ClampMin = "0.0"))
 	float InteriorListenerRadius = 250.0f;
 
-	/** Slip a tyre carries before it is heard at all. Tyres slip a little whenever a car turns or
-	 *  accelerates - that is how they make grip - and without a floor here every steering input
-	 *  squeals. Only what exceeds this is treated as sliding */
+	/** Slip, as a fraction of road speed, before the tyres are heard at all.
+	 *
+	 *  Taken as a fraction because slip velocity climbs with speed: the same corner that slips
+	 *  60 cm/s at 70 km/h slips twice that at 140, so any absolute figure squeals everywhere above
+	 *  the speed it was chosen at and stays silent everywhere below. As a fraction it holds still.
+	 *  Measured, ordinary cornering sits around 0.03 and a real slide around 0.27, so anything
+	 *  from roughly 0.08 to 0.15 divides them; higher means only proper slides are heard. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound|Config", meta = (ClampMin = "0.0"))
-	float TireSlipThreshold = 60.0f;
+	float TireSlipThreshold = 0.10f;
+
+	/** Speed below which slip is measured against this rather than the real speed, so that a
+	 *  standing burnout still reads as a slide instead of dividing by nothing, and a car creeping
+	 *  around a car park does not */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound|Config", meta = (Units = "cm/s", ClampMin = "1.0"))
+	float TireSlipMinSpeed = 500.0f;
 
 	/** Pins tyre slip to a fixed value, ignoring the wheels. Negative leaves it alone. Driven by
 	 *  vs.ForceSlip: pinning it answers whether a graph reacts to slip at all, which is otherwise
@@ -79,11 +89,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound|Config", meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float TireSlipReleaseRatio = 0.7f;
 
-	/** Slip treated as a full slide, where tyre noise is at its loudest. Together with the
-	 *  threshold this maps Chaos slip onto 0-1: raise it if tyres squeal too readily, lower it if
-	 *  they stay quiet through a slide */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound|Config", meta = (ClampMin = "1.0"))
-	float TireSlipReference = 300.0f;
+	/** Slip fraction treated as a full slide, where tyre noise is at its loudest. With the
+	 *  threshold this maps slip onto 0-1 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle Sound|Config", meta = (ClampMin = "0.01"))
+	float TireSlipReference = 0.30f;
 
 	// --- Manual State Input (use when bAutoDetectFromChaosVehicle is false) ---
 
