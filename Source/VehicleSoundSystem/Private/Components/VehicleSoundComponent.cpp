@@ -476,6 +476,9 @@ void UVehicleSoundComponent::SetCategoryVolume(EVehicleSoundCategory Category, f
 		break;
 	case EVehicleSoundCategory::Interaction:
 		if (InteractionHandler) InteractionHandler->SetVolumeMultiplier(ClampedVolume);
+		// collisions are an interaction sound too, and were the one handler this never reached,
+		// which left crash volume with no runtime control at all
+		if (ImpactHandler) ImpactHandler->SetVolumeMultiplier(ClampedVolume);
 		break;
 	case EVehicleSoundCategory::Infotainment:
 		if (InfotainmentHandler) InfotainmentHandler->SetVolumeMultiplier(ClampedVolume);
