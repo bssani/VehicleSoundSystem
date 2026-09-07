@@ -68,6 +68,13 @@ private:
 	 *  speed and to tell a real collision from a teleport */
 	FVector PreviousVelocity = FVector::ZeroVector;
 	FVector PreviousLocation = FVector::ZeroVector;
+
+	/** Speed lost so far in the collision being gathered, and where it started. One frame of a
+	 *  collision is not the collision */
+	float GatheredSpeedLost = 0.0f;
+	FVector GatheredLocation = FVector::ZeroVector;
+	float GatherElapsed = 0.0f;
+	bool bGathering = false;
 	bool bHasPreviousFrame = false;
 
 	/** Looks for an impact in this frame's change of velocity */

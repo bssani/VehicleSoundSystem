@@ -236,6 +236,24 @@ struct VEHICLESOUNDSYSTEM_API FImpactSoundConfig
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact", meta = (Units = "s"))
 	float MinTimeBetweenImpacts = 0.12f;
 
+	/** How long a collision is allowed to be gathered over before it is reported.
+	 *
+	 *  Hitting a wall stops the car inside one frame. Hitting a car that is itself moving spreads
+	 *  the same exchange over several, so any single frame holds only a slice of it and the crash
+	 *  sounds far lighter than it was. Gathering the frames reports the whole event. Keep this
+	 *  short: it is added to how long the sound takes to arrive, and a long window starts
+	 *  collecting ordinary braking. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact", meta = (Units = "s", ClampMin = "0.0"))
+	float ImpactGatherWindow = 0.06f;
+
+	/** How hard the car has to be pulled before a frame counts as part of a collision rather than
+	 *  driving. Braking and cornering are bounded by grip, a couple of g at most; a collision is
+	 *  ten or more. Given as an acceleration so it means the same at any frame rate - a per-frame
+	 *  figure would start catching heavy braking the moment the frame rate dropped, which in VR
+	 *  it does. 3000 is roughly 3g. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact", meta = (ClampMin = "0.0"))
+	float MinGatherAcceleration = 3000.0f;
+
 	/** Volume of the lightest impact that still plays. Full force is always 1.0 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact", meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float MinImpactVolume = 0.25f;

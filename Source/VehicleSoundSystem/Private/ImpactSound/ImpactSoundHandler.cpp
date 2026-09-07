@@ -264,13 +264,49 @@ void UImpactSoundHandler::DetectImpactFromVelocity(float DeltaTime)
 
 	if (bTeleported)
 	{
+		GatheredSpeedLost = 0.0f;
+		GatherElapsed = 0.0f;
+		bGathering = false;
 		return;
 	}
 
-	// braking hard is on the order of tens of cm/s per frame; hitting something is hundreds, so
-	// the existing impact threshold separates them without needing a second number
-	if (SpeedLost >= SoundData->ImpactConfig.MinImpactSpeed)
+	const FImpactSoundConfig& Config = SoundData->ImpactConfig;
+
+	// A collision against something that does not move arrives as one big frame. A car struck from
+	// behind is pushed along, so the same crash arrives as a run of middling frames instead, and
+	// judging any one of them reports a fraction of what happened. Gather every frame pulling
+	// harder than driving can and judge the collision on their total.
+	const float GatherFloor = Config.MinGatherAcceleration * DeltaTime;
+
+	if (SpeedLost >= GatherFloor)
 	{
-		ReportImpact(Location, SpeedLost);
+		if (!bGathering)
+		{
+			bGathering = true;
+			GatheredLocation = Location;
+		}
+
+		GatheredSpeedLost += SpeedLost;
+		GatherElapsed += DeltaTime;
+
+		// still in contact and there is room left in the window, so wait and see how big this gets
+		if (GatherElapsed < Config.ImpactGatherWindow)
+		{
+			return;
+		}
 	}
+	else if (!bGathering)
+	{
+		return;
+	}
+
+	// contact ended, or the window is full: this is the whole event
+	if (GatheredSpeedLost >= Config.MinImpactSpeed)
+	{
+		ReportImpact(GatheredLocation, GatheredSpeedLost);
+	}
+
+	GatheredSpeedLost = 0.0f;
+	GatherElapsed = 0.0f;
+	bGathering = false;
 }
