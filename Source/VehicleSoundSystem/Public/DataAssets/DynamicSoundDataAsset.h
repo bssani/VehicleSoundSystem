@@ -277,6 +277,21 @@ struct VEHICLESOUNDSYSTEM_API FImpactSoundConfig
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact", meta = (ClampMin = "0.0"))
 	float MinGatherAcceleration = 3000.0f;
 
+	/** How long contact has to stay quiet before the next collision counts as a new one.
+	 *
+	 *  Rubbing along a wall is one event, not thirty. Without this the detector keeps finding
+	 *  above-driving deceleration for as long as the car is against the barrier and fires a
+	 *  one-shot every gather window, which is a rattle rather than a crash. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact", meta = (Units = "s", ClampMin = "0.0"))
+	float ContactReleaseTime = 0.25f;
+
+	/** While contact continues, how much bigger the next hit has to be to be heard again.
+	 *
+	 *  1.6 means a scrape stays silent after its first touch, but a scrape that turns into a real
+	 *  crash is still heard. Set to 1 to hear every gather window, which is the old behaviour. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact", meta = (ClampMin = "1.0"))
+	float ImpactEscalation = 1.6f;
+
 	/** Volume of the lightest impact that still plays. Full force is always 1.0 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact", meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float MinImpactVolume = 0.25f;

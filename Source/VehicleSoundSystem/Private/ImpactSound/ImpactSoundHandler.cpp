@@ -113,7 +113,7 @@ void UImpactSoundHandler::ReportImpact(const FVector& Location, float ImpactSpee
 
 	const FImpactSoundConfig& Config = SoundData->ImpactConfig;
 
-	if (Config.ImpactSounds.Num() == 0 || ImpactSpeed < Config.MinImpactSpeed)
+	if (Config.ImpactSounds.Num() == 0)
 	{
 		return;
 	}
@@ -125,9 +125,27 @@ void UImpactSoundHandler::ReportImpact(const FVector& Location, float ImpactSpee
 		return;
 	}
 
-	// Chaos reports contact every frame while two bodies stay touching, so without this a scrape
-	// along a wall fires a one-shot per frame
 	const double Now = World->GetTimeSeconds();
+
+	// Contact is reported every frame while two bodies stay touching, whichever route found it.
+	// A gap means whatever comes next is a new collision rather than more of this one.
+	if (Now - LastContactTime > Config.ContactReleaseTime)
+	{
+		ContactPeakSpeed = 0.0f;
+	}
+
+	LastContactTime = Now;
+
+	// Rubbing along a barrier reports contact for as long as it lasts, and playing a one-shot each
+	// time turns one collision into a rattle. Only a hit clearly bigger than the biggest so far in
+	// this contact is heard again, so a scrape sounds once and a scrape that becomes a real crash
+	// is still heard.
+	const float Threshold = FMath::Max(Config.MinImpactSpeed, ContactPeakSpeed * Config.ImpactEscalation);
+
+	if (ImpactSpeed < Threshold)
+	{
+		return;
+	}
 
 	if (Now - LastImpactTime < Config.MinTimeBetweenImpacts)
 	{
@@ -135,6 +153,7 @@ void UImpactSoundHandler::ReportImpact(const FVector& Location, float ImpactSpee
 	}
 
 	LastImpactTime = Now;
+	ContactPeakSpeed = ImpactSpeed;
 
 	// 0 at the threshold where impacts start being audible, 1 at a full-speed crash
 	const float SpeedRange = FMath::Max(Config.MaxImpactSpeed - Config.MinImpactSpeed, 1.0f);
@@ -300,11 +319,9 @@ void UImpactSoundHandler::DetectImpactFromVelocity(float DeltaTime)
 		return;
 	}
 
-	// contact ended, or the window is full: this is the whole event
-	if (GatheredSpeedLost >= Config.MinImpactSpeed)
-	{
-		ReportImpact(GatheredLocation, GatheredSpeedLost);
-	}
+	// contact ended, or the window is full: this is the whole event. Whether it is actually heard
+	// is ReportImpact's call, so that this route and the hit-event route follow the same rule.
+	ReportImpact(GatheredLocation, GatheredSpeedLost);
 
 	GatheredSpeedLost = 0.0f;
 	GatherElapsed = 0.0f;

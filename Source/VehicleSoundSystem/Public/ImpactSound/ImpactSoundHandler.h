@@ -77,6 +77,11 @@ private:
 	bool bGathering = false;
 	bool bHasPreviousFrame = false;
 
+	/** Biggest impact heard during the contact still in progress, and when contact was last
+	 *  reported. Together these turn a scrape along a wall back into a single collision */
+	float ContactPeakSpeed = 0.0f;
+	double LastContactTime = 0.0;
+
 	/** Looks for an impact in this frame's change of velocity */
 	void DetectImpactFromVelocity(float DeltaTime);
 
